@@ -33,7 +33,7 @@ def kiem_tra_du_lieu(df_company, Ma_Cty, Nam_hien_tai):
         if not features:
             raise ValueError("Không xác định được cột feature nào là số.")
         
-        print(f"Sử dụng {len(features)} features: {features[:5]}...{features[-5:]}") # In ra vài feature đầu cuối
+        # print(f"Sử dụng {len(features)} features: {features[:5]}...{features[-5:]}") # In ra vài feature đầu cuối
         return features
     
     except Exception as e:
@@ -70,7 +70,7 @@ def chon_mo_hinh(model_type, df_company, Ma_Cty, features):
 
             # Reshape lại thành (1, SEQUENCE_LENGTH, n_features) cho LSTM input
             model_input = X_scaled_flat.reshape(1, SEQUENCE_LENGTH, n_features)
-            print(f"Input shape cho LSTM: {model_input.shape}")
+            # print(f"Input shape cho LSTM: {model_input.shape}")
             
             return model_path, model_input, model_type
 
@@ -97,7 +97,7 @@ def chon_mo_hinh(model_type, df_company, Ma_Cty, features):
 
             # Chuẩn hóa dữ liệu (dạng 2D: [n_samples, n_features])
             model_input = scaler.transform(X_latest)
-            print(f"Input shape cho MLP: {model_input.shape}")
+            # print(f"Input shape cho MLP: {model_input.shape}")
             
             return model_path, model_input, model_type
 
@@ -114,7 +114,7 @@ def chon_mo_hinh(model_type, df_company, Ma_Cty, features):
                 st.error(f"Lỗi: Dữ liệu năm cuối của {Ma_Cty} chứa giá trị NaN.")
 
             model_input = X_latest
-            print(f"Input shape cho {model_type}: {model_input.shape}")
+            # print(f"Input shape cho {model_type}: {model_input.shape}")
             
             return model_path, model_input, model_type
 
@@ -137,7 +137,7 @@ def du_doan(model_path, model_input, model_type):
 
         # Dự đoán
         prediction = model.predict(model_input)
-        print(f"Dự đoán thô từ model {model_type}: {prediction}")
+        # print(f"Dự đoán thô từ model {model_type}: {prediction}")
 
         # Lấy kết quả dự đoán đầu tiên (vì input chỉ là 1 công ty/1 sequence)
         result = int(prediction[0])

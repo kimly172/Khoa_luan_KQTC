@@ -8,9 +8,10 @@ from view.interface import setup_page, setup_sidebar, setup_interface # Thiết 
 def main():
     setup_page()
     setup_sidebar()
-
-    setup_interface()
+    
     load_custom_css()
-
+    
+    setup_interface()
+    
 if __name__ == "__main__":
     main()  # Chạy ứng dụng

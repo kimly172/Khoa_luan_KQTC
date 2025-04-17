@@ -6,96 +6,102 @@ def load_custom_css():
     st.markdown(
                 """
         <style>
+        /* Sidebar */
         [data-testid="stSidebarHeader"] {
             padding: 0px;
             height: 30px;
         }
-        
         [data-testid="stSidebar"] {
-            background-color: white ;
+            background-color: white;
             color: #333333; /* Màu nâu đậm */
+            border-radius: 12px;
         }
-        
+        [data-testid="stSidebarUserContent"] {
+            padding: 16px;
+        }
+
+        /* Main Layout */
         [data-testid="stHeader"] {
             background-color: transparent !important;
         }
-
+        [data-testid="stApp"] {
+            background: linear-gradient(to bottom left, #8DD0EB, #B1E0E7, #E3F2E6, #FBFDE3);
+        }
         [data-testid="stMainBlockContainer"] {
             padding: 16px;
         }
         
-        [data-testid="stApp"] {
-            background: linear-gradient(to bottom left, #8DD0EB, #B1E0E7, #E3F2E6, #FBFDE3);
-        }
-        
-        [data-testid="stSidebar"] {
-            border-radius: 12px;
-        }
-        
-        [data-testid="stSidebarUserContent"] {
-            padding: 16px;
-        }
-        
+        /* Biểu đồ */
+        /* Chung */
         [data-testid="stVerticalBlock"] >
         [data-testid="stVerticalBlockBorderWrapper"] > div {
-            margin:12px;
+            margin: 12px;
         }
-        
-        [data-testid="stHorizontalBlock"] > 
-        [data-testid="stColumn"] > 
-        [data-testid="stVerticalBlockBorderWrapper"]:first-child {
-            background-color: rgba(256, 256, 256, 1);
+
+        /* 2 biểu đồ đứng chung */
+        [data-testid="stMainBlockContainer"] > div > div > div > 
+        [data-testid="stHorizontalBlock"]:nth-child(n+11) > div {
+            background-color: rgba(255, 255, 255, 1); 
             border-radius: 20px;
             box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
         }
         
-        [data-testid="stHorizontalBlock"] > 
-        [data-testid="stColumn"] >
+        [data-testid="stMainBlockContainer"] > div > div > div >    
+        [data-testid="stHorizontalBlock"]:nth-child(n+11) > div * {
+            background-color: transparent !important;
+        }
+        
+        /* 1 biểu đồ đứng riêng */
+        [data-testid="stMainBlockContainer"] > div > div > div > 
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            background-color: rgba(255, 255, 255, 1); 
+            border-radius: 20px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+        }
+        [data-testid="stMainBlockContainer"] > div > div > div >    
         [data-testid="stVerticalBlockBorderWrapper"] * {
             background-color: transparent !important;
         }
         
-        
-        [data-testid="stElementContainer"] {
-            display: flex ;
-            justify-content: center ;
-        }
-
+        /* Selectbox */
         [data-testid="stSelectbox"] {
             max-width: 500px;
             min-width: 200px;
         }
         
+        
+        /* Heading */
+        [data-testid="stElementContainer"] {
+            display: flex;
+            justify-content: center;
+        }
+        [data-testid="stHeading"] {
+            text-align: center;
+            justify-content: center;
+        }
+
+        /* DataFrame */
         .stDataFrameGlideDataEditor,
         [data-testid="stDataFrameResizable"] {
-            border-radius:20px !important;
+            border-radius: 20px !important;
         }
         
-        [data-testid="stMainBlockContainer"] > div > div > div > div:nth-child(4) > div:nth-child(2) > div {
-            background-color: transparent !important;
-            box-shadow: none !important;
-        }
-        
-        /* Ô nhập Text_input */
+        /* Text Input / Select Input */
         [data-baseweb="select"],
-        [data-baseweb="select"] > div
-        {
+        [data-baseweb="select"] > div {
             background-color: white; /* Màu nền */
             border-radius: 50px;
             color: #333; /* Màu chữ xám đậm */
         }
-        /* Ô nhập Text_input */
-        [data-baseweb="select"] > div > div
-        {
+        [data-baseweb="select"] > div > div {
             padding: 8px 12px;
         }
-        /* Khi nhấn vào hộp nhập liệu, đổi viền ngoài thành đen */
         [data-baseweb="select"]:focus-within {
             border-color: #999999 !important;
-            background-color: white; /* Màu nền */
-            color: #333; /* Màu chữ xám đậm */
-        } 
-        
+            background-color: white;
+            color: #333;
+        }
+
         </style>    
         """,
         unsafe_allow_html=True,

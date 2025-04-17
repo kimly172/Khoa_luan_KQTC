@@ -17,7 +17,7 @@ def setup_model(Ma_Cty, model_type, Nam_hien_tai):
     Returns:
         str: Kết quả dự đoán ("Bị", "Không bị", hoặc thông báo lỗi).
     """
-    print(f"Bắt đầu dự đoán cho {Ma_Cty} sử dụng mô hình {model_type}")
+    # print(f"Bắt đầu dự đoán cho {Ma_Cty} sử dụng mô hình {model_type}")
     if st.session_state.get('co_san', False):
         if model_type == 'LSTM':
             # 1. Lấy dữ liệu công ty

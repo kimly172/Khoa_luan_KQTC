@@ -22,11 +22,7 @@ def setup_sidebar():
     st.markdown(
         """
         <style>
-            /* Căn giữa tiêu đề trong sidebar */
-            [data-testid="stHeading"] {
-                text-align: center;
-            }
-            
+            /* Căn giữa tiêu đề trong sidebar */            
             /* Xóa khoảng trống trên cùng cho sidebar */
             [data-testid="stSidebarHeader"] {
                 height: 50px;  /* Giảm chiều cao */
