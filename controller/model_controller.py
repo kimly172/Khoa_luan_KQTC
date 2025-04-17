@@ -1,10 +1,7 @@
 from dotenv import load_dotenv
 import os
-import pandas as pd
 import numpy as np
-import pickle
 import joblib # Hoặc dùng pickle, joblib thường tốt hơn cho scikit-learn objects
-from sklearn.preprocessing import StandardScaler
 import streamlit as st
 
 load_dotenv()  # Load từ file .env
