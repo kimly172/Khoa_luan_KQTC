@@ -26,7 +26,7 @@ def tinh_chi_so(df_cal):
     for col in ['TTS', 'VCSH', 'TSCD', 'CKPTNH', 'HTK', 'NNH', 'PTNBNH']:
         avg_col = f'{col}_binh_quan'
         df_cal[avg_col] = (df_cal[col] + df_cal[col].shift(1)) / 2
-        df_cal[avg_col].fillna(df_cal[col], inplace=True) # Năm đầu dùng chính giá trị đó
+        df_cal[avg_col] = df_cal[avg_col].fillna(df_cal[col]) # Năm đầu dùng chính giá trị đó
 
     # TSDH
     df_cal['TSDH'] = df_cal['TTS'] - df_cal['TSNH']
