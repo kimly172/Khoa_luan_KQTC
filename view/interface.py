@@ -10,7 +10,7 @@ from controller.scrape_controller import crawl_tong_hop_du_lieu_tat_ca_cho_dashb
 def setup_page():
     # Cấu hình trang
     st.set_page_config(
-        page_title="Dự đoán Rủi ro Kiệt quệ kinh tế",   # Tiêu đề hiển thị trên tab trình duyệt
+        page_title="Dự báo Kiệt quệ Tài chính",   # Tiêu đề hiển thị trên tab trình duyệt
         page_icon="https://res.cloudinary.com/day4wv1aw/image/upload/v1744197683/logo_truong_oxnwak.png", # Icon trên tab
         layout="wide", # Giao diện rộng
         initial_sidebar_state="auto" # ("auto", "expanded", or "collapsed")
