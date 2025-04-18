@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 from controller.data_controller import get_tong_hop_du_lieu
 from controller.dashboard_controller import loc_theo_nam, tinh_chi_so, phan_tich_khoi
@@ -15,19 +16,10 @@ from view.dashboard_function import (
 )
 
 # --- Trang chính ---
-def setup_dashboard(Ma_Cty):
+def setup_dashboard():
     # Lấy dữ liệu
-    if st.session_state.get('co_san', False):
-        df_total = get_tong_hop_du_lieu(Ma_Cty)
-    elif 'df_total' in st.session_state and st.session_state.df_total is not None:
-        df_total = st.session_state.df_total
-    else:
-        st.warning("Không tìm thấy dữ liệu tổng hợp.")
-        return
-
-    if df_total is None or df_total.empty:
-        st.warning(f"Không tìm thấy dữ liệu tài chính cho '{Ma_Cty}'.")
-        return
+    if not st.session_state.get('df_tong_hop', pd.DataFrame()).empty:
+        df_total = st.session_state.df_tong_hop
 
     st.header(f"PHÂN TÍCH BÁO CÁO TÀI CHÍNH")
 
@@ -70,8 +62,8 @@ def setup_dashboard(Ma_Cty):
 
     # PHÂN TÍCH CƠ CẤU TÀI SẢN VÀ NGUỒN VỐN
     st.markdown("### PHÂN TÍCH KẾT QUẢ HOẠT ĐỘNG KINH DOANH")
-    st.markdown("#### PHÂN TÍCH KHỐI")
-    phan_tich_khoi('KQKD')
+    # st.markdown("#### PHÂN TÍCH KHỐI")
+    # phan_tich_khoi('KQKD')
     
     st.markdown("#### THÔNG SỐ TĂNG TRƯỞNG")
     
@@ -106,8 +98,8 @@ def setup_dashboard(Ma_Cty):
     
     
     st.markdown("### PHÂN TÍCH BẢNG CÂN ĐỐI KẾ TOÁN")
-    st.markdown("#### PHÂN TÍCH KHỐI")
-    phan_tich_khoi('CDKT')
+    # st.markdown("#### PHÂN TÍCH KHỐI")
+    # phan_tich_khoi('CDKT')
     
     st.markdown("#### PHÂN TÍCH CƠ CẤU TÀI SẢN VÀ NGUỒN VỐN")
     

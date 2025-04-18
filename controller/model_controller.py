@@ -18,9 +18,9 @@ MODEL_PATHS = {
 SCALER_SEQUENCE_PATH = os.getenv('SCALER_SEQUENCE_PATH')
 SEQUENCE_LENGTH = int(os.getenv('SEQUENCE_LENGTH', 3))  # fallback mặc định là 3 nếu chưa có
 
-def kiem_tra_du_lieu(df_company, Ma_Cty, Nam_hien_tai):
+def kiem_tra_du_lieu(df_company):
     if df_company.empty:
-        st.error(f"Lỗi: Không tìm thấy dữ liệu cho công ty {Ma_Cty} vào năm {Nam_hien_tai} để dự báo năm {Nam_hien_tai}.")
+        st.error(f"Lỗi: Không tìm thấy dữ liệu cho công ty {st.session_state.Ma_Cty} vào năm {st.session_state.Nam_hien_tai} để dự báo năm {st.session_state.Nam_hien_tai + 1}.")
         return
 
     # Xác định các cột features (giả sử là từ cột thứ 4 trở đi)
@@ -40,19 +40,19 @@ def kiem_tra_du_lieu(df_company, Ma_Cty, Nam_hien_tai):
         st.error(f"Lỗi: Không xác định được các cột features. Chi tiết: {e}")
         
 # 2. Chuẩn bị dữ liệu đầu vào dựa trên loại mô hình
-def chon_mo_hinh(model_type, df_company, Ma_Cty, features):
+def chon_mo_hinh(df_company, features):
     try:
-        if model_type == 'LSTM':
-            model_path = MODEL_PATHS[model_type]
+        if st.session_state.model_type == 'LSTM':
+            model_path = MODEL_PATHS[st.session_state.model_type]
             scaler_path = SCALER_SEQUENCE_PATH # Scaler dành cho LSTM
             if len(df_company) < SEQUENCE_LENGTH:
-                st.error(f"Lỗi: Công ty {Ma_Cty} không có đủ dữ liệu ({len(df_company)} năm) cho chuỗi LSTM dài {SEQUENCE_LENGTH} năm.")
+                st.error(f"Lỗi: Công ty {st.session_state.Ma_Cty} không có đủ dữ liệu ({len(df_company)} năm) cho chuỗi LSTM dài {SEQUENCE_LENGTH} năm.")
 
             X_latest = df_company[features].values
 
             # Kiểm tra NaN trước khi scale
             if np.isnan(X_latest).any():
-                 st.error(f"Lỗi: Dữ liệu năm cuối của {Ma_Cty} chứa giá trị NaN.")
+                 st.error(f"Lỗi: Dữ liệu năm cuối của {st.session_state.Ma_Cty} chứa giá trị NaN.")
 
             # Load scaler đã fit cho LSTM
             try:
@@ -60,8 +60,8 @@ def chon_mo_hinh(model_type, df_company, Ma_Cty, features):
             except FileNotFoundError:
                 st.error(f"Lỗi: Không tìm thấy file scaler {scaler_path}. Hãy chắc chắn bạn đã lưu scaler sau khi huấn luyện.")
             except Exception as e:
-                return f"Lỗi khi tải scaler {scaler_path}: {e}"
-
+                st.error(f"Lỗi khi tải scaler {scaler_path}: {e}")
+                return 
 
             # Chuẩn hóa dữ liệu (scaler được fit trên dữ liệu đã reshape, nên cần reshape trước khi transform)
             n_features = X_latest.shape[1]
@@ -72,20 +72,20 @@ def chon_mo_hinh(model_type, df_company, Ma_Cty, features):
             model_input = X_scaled_flat.reshape(1, SEQUENCE_LENGTH, n_features)
             # print(f"Input shape cho LSTM: {model_input.shape}")
             
-            return model_path, model_input, model_type
+            return model_path, model_input
 
-        elif model_type == 'MLP':
-            model_path = MODEL_PATHS[model_type]
+        elif st.session_state.model_type == 'MLP':
+            model_path = MODEL_PATHS[st.session_state.model_type]
             scaler_path = SCALER_SEQUENCE_PATH # Scaler dành cho MLP
             if len(df_company) < 1:
-                st.error(f"Lỗi: Không có dữ liệu cho công ty {Ma_Cty}.") # Trường hợp này ít xảy ra nếu get_chi_so_cong_ty hoạt động đúng
+                st.error(f"Lỗi: Không có dữ liệu cho công ty {st.session_state.Ma_Cty}.") # Trường hợp này ít xảy ra nếu get_chi_so_cong_ty hoạt động đúng
 
             # Lấy dữ liệu năm cuối cùng
             X_latest = df_company[features].values
 
             # Kiểm tra NaN trước khi scale
             if np.isnan(X_latest).any():
-                st.error(f"Lỗi: Dữ liệu năm cuối của {Ma_Cty} chứa giá trị NaN.")
+                st.error(f"Lỗi: Dữ liệu năm cuối của {st.session_state.Ma_Cty} chứa giá trị NaN.")
 
             # Load scaler đã fit cho MLP
             try:
@@ -99,33 +99,33 @@ def chon_mo_hinh(model_type, df_company, Ma_Cty, features):
             model_input = scaler.transform(X_latest)
             # print(f"Input shape cho MLP: {model_input.shape}")
             
-            return model_path, model_input, model_type
+            return model_path, model_input
 
-        elif model_type in ['RF', 'XGB']:
-            model_path = MODEL_PATHS[model_type]
+        elif st.session_state.model_type in ['RF', 'XGB']:
+            model_path = MODEL_PATHS[st.session_state.model_type]
             # RF và XGB thường không yêu cầu chuẩn hóa, dựa theo code gốc của bạn
             if len(df_company) < 1:
-                st.error(f"Lỗi: Không có dữ liệu cho công ty {Ma_Cty}.")
+                st.error(f"Lỗi: Không có dữ liệu cho công ty {st.session_state.Ma_Cty}.")
 
             X_latest = df_company[features].values
 
             # Kiểm tra NaN (quan trọng vì mô hình có thể không xử lý được)
             if np.isnan(X_latest).any():
-                st.error(f"Lỗi: Dữ liệu năm cuối của {Ma_Cty} chứa giá trị NaN.")
+                st.error(f"Lỗi: Dữ liệu năm cuối của {st.session_state.Ma_Cty} chứa giá trị NaN.")
 
             model_input = X_latest
             # print(f"Input shape cho {model_type}: {model_input.shape}")
             
-            return model_path, model_input, model_type
+            return model_path, model_input
 
         else:
-            st.error(f"Lỗi: Loại mô hình '{model_type}' không được hỗ trợ. Chọn từ 'LSTM', 'MLP', 'RF', 'XGB'.")
+            st.error(f"Lỗi: Loại mô hình '{st.session_state.model_type}' không được hỗ trợ. Chọn từ 'LSTM', 'MLP', 'RF', 'XGB'.")
 
     except Exception as e:
-        return None, None, None
+        return None, None
     
 # 3. Load mô hình và dự đoán
-def du_doan(model_path, model_input, model_type):
+def du_doan(model_path, model_input):
     try:
         # Load model
         try:
@@ -148,13 +148,13 @@ def du_doan(model_path, model_input, model_type):
         
     except Exception as e:
         # Ghi lại lỗi chi tiết có thể hữu ích khi debug
-        print(f"Lỗi trong quá trình dự đoán bằng mô hình {model_type}: {e}")
+        print(f"Lỗi trong quá trình dự đoán bằng mô hình {st.session_state.model_type}: {e}")
 
-def du_doan_ket_qua(model_type, df_company, Ma_Cty, Nam_hien_tai):
-    features = kiem_tra_du_lieu(df_company, Ma_Cty, Nam_hien_tai)
+def du_doan_ket_qua(df_company):
+    features = kiem_tra_du_lieu(df_company)
     
-    model_path, model_input, model_type = chon_mo_hinh(model_type, df_company, Ma_Cty, features)
+    model_path, model_input = chon_mo_hinh(df_company, features)
 
-    ket_qua = du_doan(model_path, model_input, model_type)
+    ket_qua = du_doan(model_path, model_input)
     
     return ket_qua

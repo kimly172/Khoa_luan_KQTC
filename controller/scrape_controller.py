@@ -9,51 +9,6 @@ import numpy as np
 
 from model.scraping_cafef import FinanceStat
 
-def scrape_cafeF(company_name, nam_hien_tai, model_type):
-    financeStat = FinanceStat(company_name.lower()) 
-    report_type = ['LCTT', 'CDKT', 'KQKD']
-    all_reports_result = {}
-    for report in report_type:
-        all_reports_result[report] = financeStat.get_findata(report, nam_hien_tai, model_type)
-    
-    messages = []    
-    any_year_missing = False # Biến cờ để theo dõi nếu có năm nào bị thiếu
-
-    # Lặp qua từng báo cáo trong kết quả trả về
-    for report_name, df_report in all_reports_result.items():
-        # Đảm bảo df_report không rỗng (dù get_all_financial_reports nên đảm bảo điều này)
-        if df_report.empty:
-            messages.append(f"CẢNH BÁO: Báo cáo {report_name} bị rỗng trên CafeF.")
-            any_year_missing = True # Coi như có vấn đề
-            continue
-        
-        # Lặp qua từng cột (thường là năm) trong DataFrame của báo cáo
-        empty_years = [] # Danh sách lưu các năm rỗng trong báo cáo
-        for year_column in df_report.columns:
-            # Kiểm tra xem TẤT CẢ các giá trị trong cột năm đó có phải là null (NaN/None) không
-            if df_report[year_column].isnull().all():
-                empty_years.append(year_column)
-
-        if empty_years: # Nếu có năm rỗng trong báo cáo
-            years_str = ", ".join(map(str, empty_years)) # Chuyển danh sách năm thành chuỗi
-            any_year_missing = True
-            if len(empty_years) >= 2:
-                messages.append(f"Thông báo: Dữ liệu báo cáo {report_name} các năm {years_str} của công ty {company_name} không tồn tại trên CafeF.")
-            if len(empty_years) == 1:
-                messages.append(f"Thông báo: Dữ liệu báo cáo {report_name} năm {years_str} của công ty {company_name} không tồn tại trên CafeF.")
-                any_year_missing = True
-    if not any_year_missing:
-        messages.append("Kiểm tra hoàn tất: Tất cả các năm trong các báo cáo đều có dữ liệu hợp lệ.")
-    
-    # for message in messages:
-    #     if "CẢNH BÁO" in message or "Thông báo" in message:
-    #         st.warning(message)
-    #     else:
-    #         st.success(message)
-    
-    if not any_year_missing:
-        return all_reports_result
-
 def normalize_text(text):
     # Kiểm tra nếu text là kiểu chuỗi
     if isinstance(text, str):
@@ -127,7 +82,20 @@ def gop_file(all_reports_result):
     # Dictionary chứa dữ liệu cho từng công ty
     df_total = pd.DataFrame([])
     dong_hien_tai = 0
-    for year in df_CDKT.columns[1:]:  # Lặp qua từng năm trùng
+    
+    #Lấy năm của công ty
+    Nam_CDKT = df_CDKT.columns.tolist()
+    Nam_KQKD = df_KQKD.columns.tolist()
+    Nam_LCTT = df_LCTT.columns.tolist()
+
+    # Chuyển các danh sách thành tập hợp (set) và lấy giao (intersection)
+    Nam_trung = set(Nam_CDKT) & set(Nam_KQKD) & set(Nam_LCTT)
+
+    # Xóa số 0, sắp xếp tăng dần
+    Nam_trung = sorted(n for n in Nam_trung if n != '0' and n != 'Chỉ số')
+    # Dictionary chứa dữ liệu cho từng công ty
+    print(Nam_trung)
+    for year in Nam_trung:  # Lặp qua từng năm trùng
         df_total.at[dong_hien_tai, 'Id'] = int(dong_hien_tai + 1)
         df_total.at[dong_hien_tai, 'Ma_Cty'] = st.session_state.Ma_Cty
         df_total.at[dong_hien_tai, 'Nam'] = year
@@ -318,3 +286,25 @@ def tinh_chi_so(df_total):
     data_cleaned['Id'] = range(1, len(data_cleaned) + 1)
     
     return data_cleaned
+
+def crawl_tong_hop_du_lieu_tat_ca_cho_dashboard():
+    financeStat = FinanceStat(st.session_state.Ma_Cty) 
+    all_reports_result = financeStat.get_bao_cao_tat_ca_nam()
+    
+    if all_reports_result is None:
+        return None
+    else:
+        df_total = gop_file(all_reports_result)
+        print(all_reports_result)
+        return df_total
+    
+def crawl_tong_hop_du_lieu_2_hoac_4_nam_cho_dashboard():
+    financeStat = FinanceStat(st.session_state.Ma_Cty) 
+    all_reports_result = financeStat.get_bao_cao_1_hoac_3_nam()
+
+    if all_reports_result is None:
+        return None
+    else:
+        df_total = gop_file(all_reports_result)
+        print(all_reports_result)
+        return df_total

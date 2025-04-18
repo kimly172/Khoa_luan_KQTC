@@ -18,91 +18,109 @@ class FinanceStat:
     
     # Phương thức khởi tạo (constructor)
     def __init__(self, company_name):
-        self.company_name = company_name  # Lưu tên công ty
+        self.company_name = company_name.lower()  # Lưu tên công ty
         self.report_type_mapping = {
             'LCTT': 'cashflow',
             'KQKD': 'incsta',
             'CDKT': 'bsheet',
         }
+        
+        self.report_type_mapping_for_display = {
+            'LCTT': 'Lưu chuyển Tiền tệ',
+            'KQKD': 'Kết quả Hoạt động Kinh doanh',
+            'CDKT': 'Cân đối Kế toán',
+        }
+        
+        self.report_type_list = ['LCTT', 'KQKD', 'CDKT']
+    
+    def get_bao_cao_1_hoac_3_nam(self):
+        dict_result = {}
+        for report_type in self.report_type_list:
+            ten_bao_cao_theo_url = self.report_type_mapping.get(report_type, 'Không xác định')
+            ten_bao_cao_hien_thi = self.report_type_mapping_for_display.get(report_type, 'Không xác định')
+            
+            nam_can_thu_thap = 4 if st.session_state.model_type == 'LSTM' else 2
 
-    # Hàm lấy danh mục các chỉ tiêu tài chính (tên các dòng trong bảng)
-    def get_category(self, report_type, nam_hien_tai):
-        ten_bao_cao_theo_url = self.report_type_mapping.get(report_type, 'Không xác định')
-        
-        # Tạo URL đến trang chứa báo cáo năm 2024 (chỉ để lấy danh mục)
-        url = (f'https://s.cafef.vn/bao-cao-tai-chinh/'
-               f'{self.company_name}/{ten_bao_cao_theo_url}/'
-               f'{nam_hien_tai}/0/0/0/0/luu-chuyen-tien-te-gian-tiep-.chn')
-        
-        try:
-            # Đọc tất cả các bảng trên trang bằng pandas
-            df = pd.read_html(url)
-            # Lấy bảng thứ 5 (vị trí thứ 4) thường chứa dữ liệu báo cáo
-            df_temp = df[4]
-            # Cột đầu tiên là danh mục (tên các dòng)
-            df_category = df_temp.iloc[:, 0]
-            return df_category
-        except Exception as e:
-            st.error(f"Lỗi khi lấy báo cáo {report_type} cho công ty {self.company_name.upper()}, năm {nam_hien_tai}: {e}")
-            # Trả về Series rỗng nếu không lấy được category
+            url = (
+                f'https://s.cafef.vn/bao-cao-tai-chinh/'
+                f'{self.company_name}/{ten_bao_cao_theo_url}/'
+                f'{st.session_state.Nam_hien_tai}/0/0/0/0/luu-chuyen-tien-te-gian-tiep-.chn'
+            )
+
+            result = {} 
+
+            try:
+                web_data = pd.read_html(url)
+                table = web_data[4]
+                
+                # Lấy dữ liệu cho các năm nam_hien_tai, nam_hien_tai - 1, ...
+                for i in range(nam_can_thu_thap):
+                    col_year = st.session_state.Nam_hien_tai - i
+                    col_data = table.iloc[:, 4 - i]
+
+                    if col_data.isna().all():
+                        return None
+                    else:
+                        result[col_year] = col_data
+                result['Chỉ số'] = table.iloc[:, 0]
+            except Exception as e:
+                st.error(f"Lỗi khi lấy báo cáo {ten_bao_cao_hien_thi} cho công ty {self.company_name.upper()}, năm {st.session_state.Nam_hien_tai}: {e}")
+                return None
+
+            # Tạo DataFrame và sắp xếp cột
+            df_result = pd.DataFrame(result)
+            sorted_cols = ['Chỉ số'] + sorted([col for col in df_result.columns if col != 'Chỉ số'])
+            df_result = df_result[sorted_cols]
+
+            print(df_result.info())
+            dict_result[report_type] = df_result
+
+        return dict_result
+
     
     # Hàm lấy dữ liệu báo cáo theo từng năm
-    def get_stat(self, report_type, nam_hien_tai, model_type):
-        ten_bao_cao_theo_url = self.report_type_mapping.get(report_type, 'Không xác định')
-        
-        if model_type == 'LSTM':
-            # Tạo danh sách các năm cần lấy dữ liệu
-            # Năm hiện tại = 2023 thì range từ 2020 -> 2024 
-            # => 4 năm vì k có 2024
-            # 4 năm để tính bình quân của năm trước nữa
-            year_list = range(nam_hien_tai - 3, nam_hien_tai + 1) 
-            # Tạo dataframe rỗng với các cột là các năm
-            result = pd.DataFrame(columns = year_list)
-        
-        else:
-            # 2 năm
-            year_list = range(nam_hien_tai - 1, nam_hien_tai + 1) 
-            # Tạo dataframe rỗng với các cột là các năm
-            result = pd.DataFrame(columns = year_list)
+    def get_bao_cao_tat_ca_nam(self):
+        dict_result = {}
+        for report_type in self.report_type_list:
+            ten_bao_cao_theo_url = self.report_type_mapping.get(report_type, 'Không xác định')
+            ten_bao_cao_hien_thi = self.report_type_mapping_for_display.get(report_type, 'Không xác định')
             
-        for year in year_list:
-            # Tạo URL theo từng năm
+            year_list = list(range(1998, 2027, 4))
+            result = {} 
             
-            url = (f'https://s.cafef.vn/bao-cao-tai-chinh/'
-                   f'{self.company_name}/{ten_bao_cao_theo_url}/'
-                   f'{year}/0/0/0/0/luu-chuyen-tien-te-gian-tiep-.chn')
-            
-            try:
-                # Đọc dữ liệu trên web
-                web_data = pd.read_html(url)
-                # Cột thứ 5 (index 4) chứa số liệu, cột cuối cùng của bảng
-                result[year] = web_data[4].iloc[:, 4]
+            for year in year_list:
+                # Tạo URL theo từng năm
+                url = (f'https://s.cafef.vn/bao-cao-tai-chinh/'
+                    f'{self.company_name}/{ten_bao_cao_theo_url}/'
+                    f'{year}/0/0/0/0/luu-chuyen-tien-te-gian-tiep-.chn')
+                try:
+                    # Đọc dữ liệu trên web
+                    web_data = pd.read_html(url)
+                    table = web_data[4]
+                    
+                    for i in range(4):
+                        if not table.iloc[1:, 1+i].isna().all():
+                            # Cột thứ 5 (index 4) chứa số liệu
+                            result[year - i] = table.iloc[:, 1 + i]
+                    
+                    result['Chỉ số'] = table.iloc[:, 0]
 
-                # # Nếu tất cả các dòng đều NaN => không có dữ liệu => loại bỏ năm đó
-                # if result[year].isna().sum() == len(result):
-                #     result.drop(columns=year, inplace=True)
+                except Exception as e:
+                    st.error(f"Lỗi khi lấy báo cáo {ten_bao_cao_hien_thi} cho công ty {self.company_name.upper()}, năm {year}: {e}")
+                    continue  # Tiếp tục với năm tiếp theo thay vì return
             
-            except Exception as e:
-                st.error(f"Lỗi khi lấy báo cáo {report_type} cho công ty {self.company_name.upper()}, năm {year}: {e}")
-                # Trả về Series rỗng nếu không lấy được category
-                return 
+            # Sau khi lấy xong, tạo DataFrame và sắp xếp cột
+            df_result = pd.DataFrame(result)
             
-        return result
+            if len(df_result.columns) < 2:
+                return None
 
-    # Hàm kết hợp danh mục và dữ liệu thành bảng đầy đủ
-    def get_findata(self, report_type, nam_hien_tai, model_type):
-        """
-        Tham số:
-            report_type: ['LCTT', 'CDKT', 'KQKD'] - tên tiếng Anh của loại báo cáo
-        """
-        
-        # Ghép danh mục (tên dòng) và số liệu thành một bảng
-        result = pd.concat([self.get_category(report_type, nam_hien_tai),
-                            self.get_stat(report_type, nam_hien_tai, model_type)],
-                           axis='columns')
-        # # Đặt cột đầu tiên làm chỉ mục (tên dòng)
-        # result.set_index(0, inplace=True)
+            # Đảm bảo 'Chỉ số' luôn là cột đầu tiên
+            sorted_cols = ['Chỉ số'] + sorted([col for col in df_result.columns if col != 'Chỉ số'])
+            df_result = df_result[sorted_cols]
+            print(df_result.info())
+            dict_result[report_type] = df_result
+                
+        return dict_result
 
-        print(f'Đã lưu báo cáo: {report_type} của công ty: {self.company_name.upper()}')
-        return result
     
