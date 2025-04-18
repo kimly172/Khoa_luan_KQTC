@@ -64,7 +64,7 @@ class FinanceStat:
                         result[col_year] = col_data
                 result['Chỉ số'] = table.iloc[:, 0]
             except Exception as e:
-                st.error(f"Lỗi khi lấy báo cáo {ten_bao_cao_hien_thi} cho công ty {self.company_name.upper()}, năm {st.session_state.Nam_hien_tai}: {e}")
+                # st.error(f"Lỗi khi lấy báo cáo {ten_bao_cao_hien_thi} cho công ty {self.company_name.upper()}, năm {st.session_state.Nam_hien_tai}: {e}")
                 return None
 
             # Tạo DataFrame và sắp xếp cột
@@ -106,7 +106,7 @@ class FinanceStat:
                     result['Chỉ số'] = table.iloc[:, 0]
 
                 except Exception as e:
-                    st.error(f"Lỗi khi lấy báo cáo {ten_bao_cao_hien_thi} cho công ty {self.company_name.upper()}, năm {year}: {e}")
+                    # st.error(f"Lỗi khi lấy báo cáo {ten_bao_cao_hien_thi} cho công ty {self.company_name.upper()}, năm {year}: {e}")
                     continue  # Tiếp tục với năm tiếp theo thay vì return
             
             # Sau khi lấy xong, tạo DataFrame và sắp xếp cột
