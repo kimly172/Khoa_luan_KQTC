@@ -40,14 +40,14 @@ def load_custom_css():
 
             /* 2 biểu đồ đứng chung */
             [data-testid="stMainBlockContainer"] > div > div > div > 
-            [data-testid="stHorizontalBlock"]:nth-child(n+13) > div {
+            div:nth-child(n+11) > div {
                 background-color: rgba(255, 255, 255, 1); 
                 border-radius: 20px;
                 box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
             }
             
             [data-testid="stMainBlockContainer"] > div > div > div >    
-            [data-testid="stHorizontalBlock"]:nth-child(n+13) > div * {
+            div:nth-child(n+11) > div * {
                 background-color: transparent !important;
             }
             
