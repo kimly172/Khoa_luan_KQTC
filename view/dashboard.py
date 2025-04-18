@@ -81,9 +81,11 @@ def setup_dashboard():
     
     col1, col2 = st.columns([1,1]) # Chiếm tỷ lệ bao nhiêu
     with col1:
-        ve_bieu_do_duong(df_cal, "Biên Lợi nhuận",
-                         ['Biên lợi nhuận gộp (%)', 'EBITDA (%)', 'EBIT (%)', 'Biên lợi nhuận ròng (%)'],
-                         hover_labels=['Biên LN gộp', 'EBITDA', 'EBIT', 'Biên LN ròng'])
+        ve_bieu_do_duong(
+            df_cal, "Biên Lợi nhuận",
+            ['Biên lợi nhuận gộp (%)', 'EBITDA (%)', 'EBIT (%)', 'Biên lợi nhuận ròng (%)'],
+            hover_labels=['Biên LN gộp', 'EBITDA', 'EBIT', 'Biên LN ròng']
+        )
     with col2:
         ve_bieu_do_duong(df_cal, "ROA và ROE", ['ROA (%)', 'ROE (%)'])
         
@@ -105,7 +107,8 @@ def setup_dashboard():
     
     st.markdown("##### Cơ cấu Tài sản")
     
-    ve_bieu_do(df_cal, "Cơ cấu Tài sản", ["TSNH", "TSDH"])
+    with st.container():
+        ve_bieu_do(df_cal, "Cơ cấu Tài sản", ["TSNH", "TSDH"])
     
     col1, col2 = st.columns(2)
     with col1:
@@ -115,7 +118,9 @@ def setup_dashboard():
         
         
     st.markdown("##### Cơ cấu Nguồn vốn")
-    ve_bieu_do(df_cal, "Cơ cấu Nguồn vốn", ["NPT", "VCSH"])
+    
+    with st.container():
+        ve_bieu_do(df_cal, "Cơ cấu Nguồn vốn", ["NPT", "VCSH"])
 
     col1, col2 = st.columns(2)
     with col1:
@@ -127,35 +132,48 @@ def setup_dashboard():
     st.markdown("#### PHÂN TÍCH THÔNG SỐ HOẠT ĐỘNG")
 
     # Thay thế vong_quay_tai_san bằng ve_bieu_do_duong
-    ve_bieu_do_duong(df_cal, "Vòng quay tài sản",
-                     ['Vong_quay_tai_san', 'Vong_quay_TSCD'],
-                     hover_labels=['Vòng quay tổng tài sản', 'Vòng quay tài sản cố định'],
-                     y_format='.2f', y_suffix=' lần') # Sử dụng format và suffix mới
+    with st.container():
+        ve_bieu_do_duong(
+            df_cal, "Vòng quay tài sản",
+            ['Vong_quay_tai_san', 'Vong_quay_TSCD'],
+            hover_labels=['Vòng quay tổng tài sản', 'Vòng quay tài sản cố định'],
+            y_format='.2f', y_suffix=' lần'
+        ) # Sử dụng format và suffix mới
 
     col1, col2 = st.columns(2)
     with col1:
-        ve_bieu_do_bar_line(df_cal, "Vòng quay và Kỳ thu tiền BQ", 'Ky_thu_tien_bq', 'Vong_quay_khoan_phai_thu',
-                             'Kỳ thu tiền BQ (ngày)', 'Vòng quay KPT (lần)', 'Kỳ thu tiền', 'Vòng quay KPT', y1_format='.1f', y1_suffix=' ngày', y2_format='.2f', y2_suffix=' lần')
+        ve_bieu_do_bar_line(
+            df_cal, "Vòng quay và Kỳ thu tiền BQ", 'Ky_thu_tien_bq', 'Vong_quay_khoan_phai_thu',
+            'Kỳ thu tiền BQ (ngày)', 'Vòng quay KPT (lần)', 'Kỳ thu tiền', 'Vòng quay KPT', 
+            y1_format='.1f', y1_suffix=' ngày', y2_format='.2f', y2_suffix=' lần'
+        )
     with col2:
-        ve_bieu_do_bar_line(df_cal, "Vòng quay và Chu kỳ HTK", 'Chu_ky_chuyen_hoa_HTK', 'Vong_quay_HTK',
-                             'Chu kỳ HTK (ngày)', 'Vòng quay HTK (lần)', 'Chu kỳ HTK', 'Vòng quay HTK', y1_format='.1f', y1_suffix=' ngày', y2_format='.2f', y2_suffix=' lần')
+        ve_bieu_do_bar_line(
+            df_cal, "Vòng quay và Chu kỳ HTK", 'Chu_ky_chuyen_hoa_HTK', 'Vong_quay_HTK',
+            'Chu kỳ HTK (ngày)', 'Vòng quay HTK (lần)', 'Chu kỳ HTK', 'Vòng quay HTK', 
+            y1_format='.1f', y1_suffix=' ngày', y2_format='.2f', y2_suffix=' lần'
+        )
 
     # THÔNG SỐ KHẢ NĂNG THANH TOÁN
     st.markdown("#### THÔNG SỐ KHẢ NĂNG THANH TOÁN")
     
     col1, col2 = st.columns(2)
     with col1:    
-        ve_bieu_do_duong(df_cal, "Khả năng thanh toán hiện thời & nhanh",
-         ["Khả năng thanh toán hiện thời", "Khả năng thanh toán nhanh"],
-         hover_labels=["Khả năng thanh toán hiện thời", "Khả năng thanh toán nhanh"], # Thêm hover_labels cho rõ ràng
-         y_format='.2f', y_suffix=' lần') # Sử dụng format và suffix mới
+        ve_bieu_do_duong(
+            df_cal, "Khả năng thanh toán hiện thời & nhanh",
+            ["Khả năng thanh toán hiện thời", "Khả năng thanh toán nhanh"],
+            hover_labels=["Khả năng thanh toán hiện thời", "Khả năng thanh toán nhanh"], # Thêm hover_labels cho rõ ràng
+            y_format='.2f', y_suffix=' lần'
+        ) # Sử dụng format và suffix mới
     with col2:
         # Thay thế kha_nang_chi_tra_bang_tien bằng ve_bieu_do_bar_simple
-        ve_bieu_do_bar_simple(df_cal, "Khả năng chi trả bằng tiền",
-                              'Khả năng chi trả bằng tiền',
-                              name="Khả năng chi trả bằng tiền", # Giữ name cũ nếu muốn
-                              hover="Khả năng chi trả bằng tiền", # Giữ hover cũ nếu muốn
-                              y_format='.2f', y_suffix=' lần') # Sử dụng format và suffix mới, đơn vị là "lần"
+        ve_bieu_do_bar_simple(
+            df_cal, "Khả năng chi trả bằng tiền",
+            'Khả năng chi trả bằng tiền',
+            name="Khả năng chi trả bằng tiền", # Giữ name cũ nếu muốn
+            hover="Khả năng chi trả bằng tiền", # Giữ hover cũ nếu muốn
+            y_format='.2f', y_suffix=' lần'
+        ) # Sử dụng format và suffix mới, đơn vị là "lần"
 
     col1, col2 = st.columns(2)
     with col1:   
@@ -167,9 +185,12 @@ def setup_dashboard():
     # THÔNG SỐ NỢ
     st.markdown("#### THÔNG SỐ NỢ")
     
-    ve_bieu_do_bar_group(df_cal, "Tỷ lệ Nợ/TTS và Nợ/VCSH",
-                         ['Thông số nợ trên tài sản', 'Thông số nợ trên vốn chủ sở hữu'],
-                         names=['Nợ/TTS', 'Nợ/VCSH'], y_format='.2f', y_suffix=' lần')
+    with st.container():
+        ve_bieu_do_bar_group(
+            df_cal, "Tỷ lệ Nợ/TTS và Nợ/VCSH",
+            ['Thông số nợ trên tài sản', 'Thông số nợ trên vốn chủ sở hữu'],
+            names=['Nợ/TTS', 'Nợ/VCSH'], y_format='.2f', y_suffix=' lần'
+        )
 
     col1, col2 = st.columns(2)
     with col1:
@@ -191,4 +212,5 @@ def setup_dashboard():
     with col2:         
         ve_bieu_do_bar_simple(df_cal, "Dòng tiền từ HĐ Đầu tư", "DTRTHDDT", y_format=',.0f', y_suffix=' VNĐ')
     
-    ve_bieu_do_bar_simple(df_cal, "Dòng tiền từ HĐ Kinh doanh", "DTRTHDKD", y_format=',.0f', y_suffix=' VNĐ')
+    with st.container():
+        ve_bieu_do_bar_simple(df_cal, "Dòng tiền từ HĐ Kinh doanh", "DTRTHDKD", y_format=',.0f', y_suffix=' VNĐ')
