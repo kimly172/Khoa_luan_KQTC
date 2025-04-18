@@ -6,6 +6,8 @@ def load_custom_css():
     st.markdown(
         """
         <style>
+
+        
             /* Sidebar */
             [data-testid="stSidebarHeader"] {
                 padding: 0px;
@@ -79,6 +81,10 @@ def load_custom_css():
                 text-align: center;
                 justify-content: center;
             }
+            h1, h2, h3, h4, h5, h6 {
+                text-align: center;
+            }
+        
 
             /* DataFrame */
             .stDataFrameGlideDataEditor,
