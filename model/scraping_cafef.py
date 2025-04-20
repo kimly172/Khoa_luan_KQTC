@@ -108,7 +108,9 @@ class FinanceStat:
                     result['Chỉ số'] = table.iloc[:, 0]
 
                 except Exception as e:
-                    # st.error(f"Lỗi khi lấy báo cáo {ten_bao_cao_hien_thi} cho công ty {self.company_name.upper()}, năm {year}: {e}")
+                    import traceback
+                    import streamlit as st
+                    st.error(f"Lỗi khi lấy báo cáo {ten_bao_cao_hien_thi} cho công ty {self.company_name.upper()}, năm {year}:\n{traceback.format_exc()}")
                     continue  # Tiếp tục với năm tiếp theo thay vì return
             
             # Sau khi lấy xong, tạo DataFrame và sắp xếp cột
