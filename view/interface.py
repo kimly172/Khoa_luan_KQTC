@@ -209,12 +209,12 @@ def setup_introduce():
                 df_tong_hop_db = get_tong_hop_du_lieu()
                 
             
-            # Crawl dữ liệu từ web
-            df_tong_hop_web = crawl_tong_hop_du_lieu_tat_ca_cho_dashboard()
+            # # Crawl dữ liệu từ web
+            # df_tong_hop_web = crawl_tong_hop_du_lieu_tat_ca_cho_dashboard()
 
-            if df_tong_hop_web is None:
-                df_tong_hop_web = pd.DataFrame([])
-                st.warning(f'Không có dữ liệu của công ty {st.session_state.Ma_Cty} trên CafeF')
+            # if df_tong_hop_web is None:
+            df_tong_hop_web = pd.DataFrame([])
+            #     st.warning(f'Không có dữ liệu của công ty {st.session_state.Ma_Cty} trên CafeF')
             
             # Merge dữ liệu từ database và web
             if not df_tong_hop_db.empty and not df_tong_hop_web.empty:
