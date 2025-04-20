@@ -176,17 +176,6 @@ def chon_nam_khong_cao_web():
             parts = Nam_can_du_doan.split(" - ")
             nam_du_bao = int(parts[0]) - 1
             st.session_state.Nam_hien_tai = nam_du_bao
-            
-            if len(parts) == 2 and parts[1] == "Không đủ dữ liệu":
-                if model_type == 'LSTM':
-                    nam_can_kiem_tra = list(range(nam_du_bao - 3, nam_du_bao + 1))
-                else:
-                    nam_can_kiem_tra = list(range(nam_du_bao - 1, nam_du_bao + 1))
-                nam_thieu = [n for n in nam_can_kiem_tra if n not in list_cong_ty_theo_nam]
-                st.warning(f"Không đủ dữ liệu để dự báo cho năm {nam_du_bao + 1}. Thiếu dữ liệu cho các năm: {', '.join(map(str, nam_thieu))}.")
-                st.session_state.co_san_du_lieu_du_doan = False
-            else:
-                st.session_state.co_san_du_lieu_du_doan = True
         else:
             st.session_state.Nam_hien_tai = ''
             st.session_state.co_san_du_lieu_du_doan = False
@@ -203,7 +192,7 @@ def chon_nam_khong_cao_web():
         st.session_state.co_san_du_lieu_du_doan = False
 
 def upload_bao_cao():
-    st.markdown("Bạn phải upload đầy đủ các file báo cáo tài chính (CDKT, KQKD, LCTT) để hệ thống có thể xử lý dữ liệu.")
+    # st.markdown("Bạn phải upload đầy đủ các file báo cáo tài chính (CDKT, KQKD, LCTT) để hệ thống có thể xử lý dữ liệu.")
     
     gap1, col, gap2 = st.columns([1, 1.3, 1])
     with col:   
@@ -232,8 +221,10 @@ def upload_bao_cao():
             st.session_state.uploaded_lctt = uploaded_lctt
         else:
             st.session_state.uploaded_lctt = None
+        
+
     
-    st.markdown("**Lưu ý:** Hệ thống yêu cầu upload đầy đủ cả 3 file báo cáo tài chính để tiếp tục xử lý.")
+    # st.markdown("**Lưu ý:** Hệ thống yêu cầu upload đầy đủ cả 3 file báo cáo tài chính để tiếp tục xử lý.")
 
 def setup_introduce():
     # Tạo tiêu đề trong sidebar
@@ -246,9 +237,27 @@ def setup_introduce():
             chon_cong_ty_khong_cao_web()
         with col2:
             chon_nam_khong_cao_web()
-    
+            
     # Thêm phần upload báo cáo
     upload_bao_cao()
+    
+    # Kiểm tra dữ liệu dự báo sau khi chọn năm
+    if st.session_state.get('Nam_hien_tai', ''):
+        nam_du_bao = st.session_state.Nam_hien_tai
+        model_type = st.session_state.get('model_type', 'XGB')
+        if st.session_state.get('da_lay_du_lieu', False) and not st.session_state.get('df_tong_hop', pd.DataFrame()).empty:
+            df_cong_ty = st.session_state.df_tong_hop 
+            list_cong_ty_theo_nam = df_cong_ty['Nam'].tolist()
+            if model_type == 'LSTM':
+                nam_can_kiem_tra = list(range(nam_du_bao - 3, nam_du_bao + 1))
+            else:
+                nam_can_kiem_tra = list(range(nam_du_bao - 1, nam_du_bao + 1))
+            nam_thieu = [n for n in nam_can_kiem_tra if n not in list_cong_ty_theo_nam]
+            if nam_thieu:
+                st.warning(f"Không đủ dữ liệu để dự báo cho năm {nam_du_bao + 1}. Thiếu dữ liệu cho năm: {', '.join(map(str, nam_thieu))}.") 
+                st.session_state.co_san_du_lieu_du_doan = False
+            else:
+                st.session_state.co_san_du_lieu_du_doan = True
     
     # Kiểm tra mã công ty có tồn tại và chưa lấy dữ liệu
     if not st.session_state.get('da_lay_du_lieu', False) and st.session_state.get('Ma_Cty', ''):

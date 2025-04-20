@@ -143,20 +143,44 @@ def merge_du_lieu_upload(df_total, uploaded_cdkt, uploaded_kqkd, uploaded_lctt):
     # Tính tỷ lệ chuẩn hóa nếu có dữ liệu trong database
     ty_le_chuan_hoa = 1.0
     if not df_total.empty:
-        # Lấy một giá trị mẫu từ dữ liệu upload và database để so sánh (ví dụ: TTS từ CDKT)
-        for year in df_cdkt.columns[1:]:
-            if year in df_total['Nam'].values:
-                upload_val = df_cdkt.loc[df_cdkt.iloc[:, 0].str.contains(normalize_text(search_terms_CDKT['TTS']), na=False), year]
-                if not upload_val.empty:
-                    upload_val = float(upload_val.values[0])
-                    db_val = df_total.loc[df_total['Nam'] == int(year), 'TTS']
-                    if not db_val.empty:
-                        db_val = float(db_val.values[0])
-                        if upload_val != 0:
-                            ty_le_chuan_hoa = db_val / upload_val
-                            st.info(f"Đã tính tỷ lệ chuẩn hóa dữ liệu upload: {ty_le_chuan_hoa:.2f} dựa trên giá trị Tổng Tài Sản năm {year}.")
-                            break
-        if ty_le_chuan_hoa == 1.0:
+        # Danh sách các tỷ lệ chuẩn hóa hợp lệ (các bội số của 1000)
+        valid_ratios = [1000**i for i in range(-3, 4)]  # [0.000001, 0.001, 1, 1000, 1000000, 1000000000, 1000000000000]
+        found_ratio = False
+        
+        # Kiểm tra nhiều search term khác nhau để tìm tỷ lệ chuẩn hóa
+        search_terms_to_check = [
+            ('CDKT', search_terms_CDKT['TTS'], df_cdkt, 'TTS'),
+            ('CDKT', search_terms_CDKT['VCSH'], df_cdkt, 'VCSH'),
+            ('KQKD', search_terms_KQKD['DTT'], df_kqkd, 'DTT'),
+            ('KQKD', search_terms_KQKD['LNR'], df_kqkd, 'LNR'),
+        ]
+        
+        for term_type, term, df_source, column in search_terms_to_check:
+            for year in df_source.columns[1:]:
+                if year in df_total['Nam'].values:
+                    upload_val_series = df_source.loc[df_source.iloc[:, 0].str.contains(normalize_text(term), na=False), year]
+                    if not upload_val_series.empty:
+                        upload_val = float(upload_val_series.values[0])
+                        db_val_series = df_total.loc[df_total['Nam'] == int(year), column]
+                        if not db_val_series.empty:
+                            db_val = float(db_val_series.values[0])
+                            if upload_val != 0 and db_val != 0:
+                                ratio = db_val / upload_val
+                                # Kiểm tra nếu tỷ lệ gần với một trong các giá trị hợp lệ
+                                for valid_ratio in valid_ratios:
+                                    if abs(ratio - valid_ratio) / valid_ratio < 0.1:  # Sai số 10%
+                                        ty_le_chuan_hoa = valid_ratio
+                                        st.info(f"Đã tính tỷ lệ chuẩn hóa dữ liệu upload: {ty_le_chuan_hoa:.2f} dựa trên giá trị {term_type} năm {year}.")
+                                        found_ratio = True
+                                        break
+                            if found_ratio:
+                                break
+                if found_ratio:
+                    break
+            if found_ratio:
+                break
+                
+        if ty_le_chuan_hoa == 1.0 and not found_ratio:
             st.warning("Không tìm thấy giá trị phù hợp để tính tỷ lệ chuẩn hóa. Dữ liệu upload sẽ được giữ nguyên.")
     
     # Merge dữ liệu upload vào df_total

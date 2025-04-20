@@ -30,7 +30,7 @@ def setup_model():
                 st.success(f'Kết quả: Công ty {st.session_state.Ma_Cty} sẽ Kiệt quệ Tài chính vào {st.session_state.Nam_hien_tai + 1}')
             else:
                 st.info(f'Kết quả: Công ty {st.session_state.Ma_Cty} sẽ không Kiệt quệ Tài chính vào {st.session_state.Nam_hien_tai + 1}')
-        else:
-            st.warning(f"Không thể tính toán chỉ số để dự báo cho năm {nam_ht + 1}.")
+        # else:
+        #     st.warning(f"Không thể tính toán chỉ số để dự báo cho năm {nam_ht + 1}.")
     else:
         st.warning("Không có dữ liệu để dự báo. Vui lòng chọn công ty và đảm bảo dữ liệu đã được tải.")
