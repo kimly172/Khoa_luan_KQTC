@@ -26,19 +26,30 @@ def xu_ly_file_upload(uploaded_file, loai_bao_cao):
             st.warning(f"Định dạng file {loai_bao_cao} không được hỗ trợ. Vui lòng sử dụng file Excel hoặc CSV.")
             return None
         
-        # Tìm dòng có cột từ thứ 2 trở đi là dạng năm (số nguyên từ 2000 đến năm hiện tại)
+        # Tìm dòng có tất cả các cột từ thứ 2 trở đi là dạng năm (số nguyên từ 2000 đến năm hiện tại)
         start_row = None
         for i in range(len(df)):
             row = df.iloc[i]
+            all_columns_are_years = True
+            
+            # Kiểm tra tất cả các cột từ thứ 2 trở đi
             for j in range(1, len(row)):
                 try:
+                    # Bỏ qua các cột trống
+                    if pd.isna(row[j]) or row[j] == '':
+                        continue
+                        
                     val = float(row[j])
-                    if val.is_integer() and 2000 <= int(val) <= pd.Timestamp.now().year:
-                        start_row = i
+                    if not (val.is_integer() and 2000 <= int(val) <= pd.Timestamp.now().year):
+                        all_columns_are_years = False
                         break
                 except (ValueError, TypeError):
-                    continue
-            if start_row is not None:
+                    all_columns_are_years = False
+                    break
+            
+            # Chỉ lấy dòng làm header khi tất cả các cột từ thứ 2 trở đi đều là năm
+            if all_columns_are_years and len(row) > 1:  # Đảm bảo có ít nhất một cột năm
+                start_row = i
                 break
         
         if start_row is None:

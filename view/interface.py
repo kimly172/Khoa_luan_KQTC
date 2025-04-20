@@ -95,6 +95,7 @@ def chon_cong_ty():
             st.session_state.Ma_Cty = ma_cty_moi
             st.session_state.co_san_Cty = co_san_cty_moi
             st.session_state.da_lay_du_lieu = False
+            st.rerun()
             
 def chon_nam():
     if st.session_state.get('da_lay_du_lieu', False) and not st.session_state.get('df_tong_hop', pd.DataFrame()).empty:

@@ -213,7 +213,7 @@ def ve_bieu_do(df, title, chi_tieu_con):
         xaxis=dict(type='category', showgrid=False, zeroline=False, showline=True, linecolor='black'),
         yaxis=dict(tickformat=',.0f', showgrid=False, zeroline=False, showline=True, linecolor='black'),
         plot_bgcolor='white',
-        legend=dict(title="", x=0.5, y=-0.3, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa vị trí legend
+        legend=dict(title="", x=0.5, y=1.25, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa vị trí legend
         margin=dict(l=50, r=50, t=100, b=40), # Chuẩn hóa margin
         height=300 # Chuẩn hóa height
     )
@@ -277,7 +277,7 @@ def ve_bieu_do_duong(df, title, chi_tieu_con, hover_labels=None, y_format='.2f',
         xaxis=dict(type='category', showgrid=False, zeroline=False, showline=True, linecolor='black'),
         yaxis=dict(tickformat=y_format, ticksuffix=y_suffix, showgrid=False, zeroline=False, showline=True, linecolor='black'), # Sử dụng y_format và y_suffix
         plot_bgcolor='white',
-        legend=dict(x=0.5, y=-0.3, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa layout
+        legend=dict(x=0.5, y=1.25, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa layout
         margin=dict(l=50, r=50, t=100, b=40), # Chuẩn hóa layout
         height=300 # Chuẩn hóa layout
     )
@@ -377,7 +377,7 @@ def ve_bieu_do_bar_line(df, title, bar_col, line_col, bar_name, line_name, bar_h
         yaxis=layout_yaxis,
         yaxis2=layout_yaxis2 if bar_valid and line_valid else None, # Chỉ thêm yaxis2 nếu cả hai đều hợp lệ
         plot_bgcolor='white',
-        legend=dict(x=0.5, y=-0.3, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa layout
+        legend=dict(x=0.5, y=1.25, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa layout
         margin=dict(l=50, r=50, t=100, b=40), # Chuẩn hóa layout
         height=300 # Chuẩn hóa layout
     )
@@ -445,7 +445,7 @@ def ve_bieu_do_bar_group(df, title, cols, names=None, hovers=None, y_format=',.2
         xaxis=dict(type='category', showgrid=False, zeroline=False, showline=True, linecolor='black'),
         yaxis=dict(tickformat=y_format, ticksuffix=y_suffix, showgrid=False, zeroline=False, showline=True, linecolor='black'), # Thêm suffix
         plot_bgcolor='white',
-        legend=dict(x=0.5, y=-0.3, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa layout
+        legend=dict(x=0.5, y=1.25, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa layout
         margin=dict(l=50, r=50, t=100, b=40), # Chuẩn hóa layout
         height=300 # Chuẩn hóa layout
     )
@@ -496,7 +496,7 @@ def ve_bieu_do_bar_simple(df, title, col, name=None, hover=None, y_format=',.2f'
         xaxis=dict(type='category', showgrid=False, zeroline=False, showline=True, linecolor='black'),
         yaxis=dict(tickformat=y_format, ticksuffix=y_suffix, showgrid=False, zeroline=False, showline=True, linecolor='black'), # Thêm suffix
         plot_bgcolor='white',
-        legend=dict(x=0.5, y=-0.3, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa layout
+        legend=dict(x=0.5, y=1.25, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa layout
         margin=dict(l=50, r=50, t=100, b=40), # Chuẩn hóa layout
         height=300 # Chuẩn hóa layout
     )
@@ -590,7 +590,7 @@ def ROA_bieu_do_Dupont(df_total):
             tickfont=dict(color=color_vqts) # Màu tick theo màu chỉ số
         ),
         plot_bgcolor='white',
-        legend=dict(x=0.5, y=-0.3, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa legend
+        legend=dict(x=0.5, y=1.25, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa legend
         margin=dict(l=60, r=60, t=100, b=40), # Chuẩn hóa margin
         height=300 # Chuẩn hóa height
     )
@@ -699,7 +699,7 @@ def ROE_bieu_do_Dupont(df_total):
             # tickfont=dict(color='black') # Giữ màu đen cho dễ đọc
         ),
         plot_bgcolor='white',
-        legend=dict(x=0.5, y=-0.3, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa legend
+        legend=dict(x=0.5, y=1.25, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa legend
         margin=dict(l=60, r=60, t=100, b=40), # Chuẩn hóa margin
         height=300 # Chuẩn hóa height
     )
@@ -791,7 +791,7 @@ def vong_quay_va_ky_thanh_toan_binh_quan(df_total):
             tickfont=dict(color=color_line) # Tick màu theo chỉ số
         ),
         plot_bgcolor='white',
-        legend=dict(x=0.5, y=-0.3, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa legend
+        legend=dict(x=0.5, y=1.25, orientation='h', xanchor='center', font=dict(size=10)), # Chuẩn hóa legend
         margin=dict(l=60, r=60, t=100, b=40), # Chuẩn hóa margin
         height=300 # Chuẩn hóa height
     )
