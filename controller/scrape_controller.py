@@ -1,9 +1,7 @@
 import pandas as pd
 import streamlit as st
-import os
 import pandas as pd
 from unidecode import unidecode
-from time import sleep
 import re
 import numpy as np
 
@@ -94,7 +92,7 @@ def gop_file(all_reports_result):
     # Xóa số 0, sắp xếp tăng dần
     Nam_trung = sorted(n for n in Nam_trung if n != '0' and n != 'Chỉ số')
     # Dictionary chứa dữ liệu cho từng công ty
-    print(Nam_trung)
+
     for year in Nam_trung:  # Lặp qua từng năm trùng
         df_total.at[dong_hien_tai, 'Id'] = int(dong_hien_tai + 1)
         df_total.at[dong_hien_tai, 'Ma_Cty'] = st.session_state.Ma_Cty
@@ -228,7 +226,7 @@ def tinh_chi_so(df_total):
         # Gán giá trị trung bình vào cột mới
         df_filtered[f'{chi_so_binh_quan}_binh_quan'] = average_values
         # Với năm đầu tiên của mỗi công ty (shifted_values sẽ là NaN), lấy giá trị gốc
-        df_filtered[f'{chi_so_binh_quan}_binh_quan'].fillna(df_filtered[chi_so_binh_quan], inplace=True)
+        df_filtered[f'{chi_so_binh_quan}_binh_quan'] = df_filtered[f'{chi_so_binh_quan}_binh_quan'].fillna(df_filtered[chi_so_binh_quan])
 
     # --- Tính toán các chỉ số x ---
 
@@ -295,16 +293,4 @@ def crawl_tong_hop_du_lieu_tat_ca_cho_dashboard():
         return None
     else:
         df_total = gop_file(all_reports_result)
-        print(all_reports_result)
-        return df_total
-    
-def crawl_tong_hop_du_lieu_2_hoac_4_nam_cho_dashboard():
-    financeStat = FinanceStat(st.session_state.Ma_Cty) 
-    all_reports_result = financeStat.get_bao_cao_1_hoac_3_nam()
-
-    if all_reports_result is None:
-        return None
-    else:
-        df_total = gop_file(all_reports_result)
-        print(all_reports_result)
         return df_total

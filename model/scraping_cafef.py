@@ -1,5 +1,5 @@
 import pandas as pd
-import datetime
+from datetime import datetime
 import streamlit as st
 
 # Định nghĩa lớp FinanceStat để thu thập dữ liệu báo cáo tài chính từ website cafef.vn
@@ -33,49 +33,48 @@ class FinanceStat:
         
         self.report_type_list = ['LCTT', 'KQKD', 'CDKT']
     
-    def get_bao_cao_1_hoac_3_nam(self):
-        dict_result = {}
-        for report_type in self.report_type_list:
-            ten_bao_cao_theo_url = self.report_type_mapping.get(report_type, 'Không xác định')
-            ten_bao_cao_hien_thi = self.report_type_mapping_for_display.get(report_type, 'Không xác định')
+    # def get_bao_cao_1_hoac_3_nam(self):
+    #     dict_result = {}
+    #     for report_type in self.report_type_list:
+    #         ten_bao_cao_theo_url = self.report_type_mapping.get(report_type, 'Không xác định')
+    #         ten_bao_cao_hien_thi = self.report_type_mapping_for_display.get(report_type, 'Không xác định')
             
-            nam_can_thu_thap = 4 if st.session_state.model_type == 'LSTM' else 2
+    #         nam_can_thu_thap = 4 if st.session_state.model_type == 'LSTM' else 2
 
-            url = (
-                f'https://s.cafef.vn/bao-cao-tai-chinh/'
-                f'{self.company_name}/{ten_bao_cao_theo_url}/'
-                f'{st.session_state.Nam_hien_tai}/0/0/0/0/luu-chuyen-tien-te-gian-tiep-.chn'
-            )
+    #         url = (
+    #             f'https://s.cafef.vn/bao-cao-tai-chinh/'
+    #             f'{self.company_name}/{ten_bao_cao_theo_url}/'
+    #             f'{st.session_state.Nam_hien_tai}/0/0/0/0/luu-chuyen-tien-te-gian-tiep-.chn'
+    #         )
 
-            result = {} 
+    #         result = {} 
 
-            try:
-                web_data = pd.read_html(url)
-                table = web_data[4]
+    #         try:
+    #             web_data = pd.read_html(url)
+    #             table = web_data[4]
                 
-                # Lấy dữ liệu cho các năm nam_hien_tai, nam_hien_tai - 1, ...
-                for i in range(nam_can_thu_thap):
-                    col_year = st.session_state.Nam_hien_tai - i
-                    col_data = table.iloc[:, 4 - i]
+    #             # Lấy dữ liệu cho các năm nam_hien_tai, nam_hien_tai - 1, ...
+    #             for i in range(nam_can_thu_thap):
+    #                 col_year = st.session_state.Nam_hien_tai - i
+    #                 col_data = table.iloc[:, 4 - i]
 
-                    if col_data.isna().all():
-                        return None
-                    else:
-                        result[col_year] = col_data
-                result['Chỉ số'] = table.iloc[:, 0]
-            except Exception as e:
-                # st.error(f"Lỗi khi lấy báo cáo {ten_bao_cao_hien_thi} cho công ty {self.company_name.upper()}, năm {st.session_state.Nam_hien_tai}: {e}")
-                return None
+    #                 if col_data.isna().all():
+    #                     return None
+    #                 else:
+    #                     result[col_year] = col_data
+    #             result['Chỉ số'] = table.iloc[:, 0]
+    #         except Exception as e:
+    #             # st.error(f"Lỗi khi lấy báo cáo {ten_bao_cao_hien_thi} cho công ty {self.company_name.upper()}, năm {st.session_state.Nam_hien_tai}: {e}")
+    #             return None
 
-            # Tạo DataFrame và sắp xếp cột
-            df_result = pd.DataFrame(result)
-            sorted_cols = ['Chỉ số'] + sorted([col for col in df_result.columns if col != 'Chỉ số'])
-            df_result = df_result[sorted_cols]
+    #         # Tạo DataFrame và sắp xếp cột
+    #         df_result = pd.DataFrame(result)
+    #         sorted_cols = ['Chỉ số'] + sorted([col for col in df_result.columns if col != 'Chỉ số'])
+    #         df_result = df_result[sorted_cols]
 
-            print(df_result.info())
-            dict_result[report_type] = df_result
+    #         dict_result[report_type] = df_result
 
-        return dict_result
+    #     return dict_result
 
     
     # Hàm lấy dữ liệu báo cáo theo từng năm
@@ -85,10 +84,11 @@ class FinanceStat:
             ten_bao_cao_theo_url = self.report_type_mapping.get(report_type, 'Không xác định')
             ten_bao_cao_hien_thi = self.report_type_mapping_for_display.get(report_type, 'Không xác định')
             
-            year_list = list(range(1998, 2027, 4))
+            year_list = list(range(datetime.now().year, 2000, -4))
             result = {} 
-            
+
             for year in year_list:
+                
                 # Tạo URL theo từng năm
                 url = (f'https://s.cafef.vn/bao-cao-tai-chinh/'
                     f'{self.company_name}/{ten_bao_cao_theo_url}/'
@@ -99,10 +99,12 @@ class FinanceStat:
                     table = web_data[4]
                     
                     for i in range(4):
-                        if not table.iloc[1:, 1+i].isna().all():
+                        col_data = table.iloc[:, 4 - i]
+
+                        if not col_data.isna().all() :
                             # Cột thứ 5 (index 4) chứa số liệu
-                            result[year - i] = table.iloc[:, 1 + i]
-                    
+                            result[year - i] = col_data
+
                     result['Chỉ số'] = table.iloc[:, 0]
 
                 except Exception as e:
@@ -111,14 +113,14 @@ class FinanceStat:
             
             # Sau khi lấy xong, tạo DataFrame và sắp xếp cột
             df_result = pd.DataFrame(result)
-            
+
             if len(df_result.columns) < 2:
                 return None
 
             # Đảm bảo 'Chỉ số' luôn là cột đầu tiên
             sorted_cols = ['Chỉ số'] + sorted([col for col in df_result.columns if col != 'Chỉ số'])
             df_result = df_result[sorted_cols]
-            print(df_result.info())
+
             dict_result[report_type] = df_result
                 
         return dict_result

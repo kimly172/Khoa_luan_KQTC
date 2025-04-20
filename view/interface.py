@@ -6,6 +6,7 @@ from view.model import setup_model
 
 from controller.data_controller import get_thong_tin_cong_ty, get_tong_hop_du_lieu
 from controller.scrape_controller import crawl_tong_hop_du_lieu_tat_ca_cho_dashboard
+from controller.upload_controller import merge_du_lieu_upload
 # --- Giao diện Streamlit ---
 def setup_page():
     # Cấu hình trang
@@ -49,9 +50,9 @@ def setup_sidebar():
         Dự án này sử dụng các mô hình học máy để phân tích dữ liệu tài chính và đưa ra dự báo về khả năng phá sản của các công ty.
 
         **Cách sử dụng:**
-        1.  Chọn tên công ty bạn muốn phân tích từ ô chọn bên dưới.
-        2.  Xem các chỉ số tài chính và biểu đồ trực quan hóa.
-        3.  (Tính năng tương lai) Nhận dự đoán về rủi ro phá sản.
+        1.  Chọn công ty cần phân tích để hệ thống tự động lấy dữ liệu từ nguồn có sẵn.
+        2.  Bạn có thể tải lên báo cáo tài chính (CDKT, KQKD, LCTT) để bổ sung.
+        3.  Hệ thống sẽ phân tích các chỉ số tài chính tổng quan và đưa ra dự báo về nguy cơ kiệt quệ Tài chính.
     """)
     
 def chon_cong_ty():
@@ -99,61 +100,90 @@ def chon_nam():
     if st.session_state.get('da_lay_du_lieu', False) and not st.session_state.get('df_tong_hop', pd.DataFrame()).empty:
         df_cong_ty = st.session_state.df_tong_hop 
         list_cong_ty_theo_nam = df_cong_ty['Nam'].tolist()
-        print(list_cong_ty_theo_nam)
+
         danh_sach_nam = list(range(2013, 2025))
         nam_hien_thi = []
         for nam in danh_sach_nam:
             if nam in list_cong_ty_theo_nam:
-                if st.session_state.da_cao_du_lieu:
-                    nam_hien_thi.append(f"{nam + 1} - Đã thu thập") 
-                else:    
-                    nam_hien_thi.append(f"{nam + 1} - Có sẵn") 
+                nam_hien_thi.append(f"{nam + 1} - Có dữ liệu")
             else:
-                if st.session_state.da_cao_du_lieu:
-                    nam_hien_thi.append(f"{nam + 1} - Không có") 
-                else:
-                    nam_hien_thi.append(f"{nam + 1} - Cần thu thập") 
+                nam_hien_thi.append(f"{nam + 1} - Không có dữ liệu")
 
-        # Phần chọn công ty trên trang chính
+        # Phần chọn năm trên trang chính
         Nam_can_du_doan = st.selectbox(
             "Vui lòng nhập năm cần dự báo:",
             options=[""] + nam_hien_thi, # Thêm lựa chọn rỗng ban đầu
-            index=0, # Mặc định không chọn công ty nào
+            index=0, # Mặc định không chọn năm nào
             help="Chọn một năm từ danh sách để dự báo."
         )
         
         parts = Nam_can_du_doan.split(" - ")
-        
-        # Không có dữ liệu nên cần thu thập
-        if len(parts) == 2 and parts[1] == 'Cần thu thập':
-            st.session_state.co_san_du_lieu_du_doan = False  
-            
-        # Đã thu thập nhưng không có 
-        elif len(parts) == 2 and parts[1] == 'Không có':
-            st.session_state.co_san_du_lieu_du_doan = False 
-            
-        # Có sẵn dữ liệu nên không cần thu thập
-        elif len(parts) == 2 and parts[1] == 'Có sẵn':
-            st.session_state.co_san_du_lieu_du_doan = True  
-            
-        # Không có dữ liệu nên đã thu thập 
-        elif len(parts) == 2 and parts[1] == 'Đã thu thập':
-             st.session_state.co_san_du_lieu_du_doan = True     
-            
         if len(parts) == 2 and parts[0] != '':
-            st.session_state.Nam_hien_tai = int(parts[0]) - 1
-        else: 
-            st.session_state.Nam_hien_tai = ''
+            nam_du_bao = int(parts[0]) - 1
+            st.session_state.Nam_hien_tai = nam_du_bao
             
+            # Kiểm tra loại mô hình và dữ liệu đủ để dự báo
+            model_type = st.session_state.get('model_type', 'XGB')
+            if model_type == 'LSTM':
+                # LSTM cần dữ liệu 3 năm trước đó
+                nam_can_kiem_tra = list(range(nam_du_bao - 2, nam_du_bao + 1))
+            else:
+                # Các mô hình khác chỉ cần dữ liệu năm hiện tại
+                nam_can_kiem_tra = [nam_du_bao]
+            
+            nam_thieu = [nam for nam in nam_can_kiem_tra if nam not in list_cong_ty_theo_nam]
+            if nam_thieu:
+                st.warning(f"Không đủ dữ liệu để dự báo cho năm {nam_du_bao + 1}. Thiếu dữ liệu cho các năm: {', '.join(map(str, nam_thieu))}.")
+                st.session_state.co_san_du_lieu_du_doan = False
+            else:
+                st.session_state.co_san_du_lieu_du_doan = True
+        else:
+            st.session_state.Nam_hien_tai = ''
+            st.session_state.co_san_du_lieu_du_doan = False
     else:
-        # Phần chọn công ty trên trang chính
+        # Phần chọn năm trên trang chính
         Nam_can_du_doan = st.selectbox(
             "Vui lòng nhập năm cần dự báo:",
             options=[""], # Thêm lựa chọn rỗng ban đầu
-            index=0, # Mặc định không chọn công ty nào
+            index=0, # Mặc định không chọn năm nào
             help="Chọn một năm từ danh sách để dự báo.",
-            disabled= True
+            disabled=True
         )
+        st.session_state.Nam_hien_tai = ''
+        st.session_state.co_san_du_lieu_du_doan = False
+
+def upload_bao_cao():
+    # st.markdown("Bạn có thể upload các file báo cáo tài chính (CDKT, KQKD, LCTT) để bổ sung dữ liệu. Nếu thiếu file, hệ thống vẫn có thể tiếp tục xử lý.")
+    
+    gap1, col, gap2 = st.columns([1, 1.3, 1])
+    with col:   
+        # col1, col2, col3 = st.columns([1, 1, 1])
+        # with col1:    
+            # Ô upload cho CDKT
+            uploaded_cdkt = st.file_uploader("Upload Bảng Cân Đối Kế Toán (CDKT)", type=["xlsx", "xls", "csv"], key="upload_cdkt")
+            if uploaded_cdkt is not None:
+                st.session_state.uploaded_cdkt = uploaded_cdkt
+                # st.success("Đã upload file CDKT thành công!")
+            else:
+                st.session_state.uploaded_cdkt = None
+        # with col2:
+            # Ô upload cho KQKD
+            uploaded_kqkd = st.file_uploader("Upload Báo Cáo Kết Quả Hoạt Động Kinh Doanh (KQKD)", type=["xlsx", "xls", "csv"], key="upload_kqkd")
+            if uploaded_kqkd is not None:
+                st.session_state.uploaded_kqkd = uploaded_kqkd
+                # st.success("Đã upload file KQKD thành công!")
+            else:
+                st.session_state.uploaded_kqkd = None
+        # with col3:
+            # Ô upload cho LCTT
+            uploaded_lctt = st.file_uploader("Upload Báo Cáo Lưu Chuyển Tiền Tệ (LCTT)", type=["xlsx", "xls", "csv"], key="upload_lctt")
+            if uploaded_lctt is not None:
+                st.session_state.uploaded_lctt = uploaded_lctt
+                # st.success("Đã upload file LCTT thành công!")
+            else:
+                st.session_state.uploaded_lctt = None
+    
+    # st.markdown("**Lưu ý:** Nếu không upload file, hệ thống sẽ sử dụng dữ liệu từ database hoặc thu thập từ web.")
 
 def setup_introduce():
     # Tạo tiêu đề trong sidebar
@@ -167,26 +197,44 @@ def setup_introduce():
         with col2:
             chon_nam()
     
+    # Thêm phần upload báo cáo
+    upload_bao_cao()
+    
     # Kiểm tra mã công ty có tồn tại và chưa lấy dữ liệu
     if not st.session_state.get('da_lay_du_lieu', False) and st.session_state.get('Ma_Cty', ''):
-        if st.session_state.get('co_san_Cty', False):
-            with st.spinner(f'Đang lấy dữ liệu từ Database cho công ty {st.session_state.Ma_Cty}'):
-                st.session_state.df_tong_hop = get_tong_hop_du_lieu()
-                st.session_state.da_lay_du_lieu = True
-                st.session_state.da_cao_du_lieu = False
-                st.rerun()
-        else:    
-            with st.spinner(f'Đang thu thập dữ liệu từ CafeF cho công ty {st.session_state.Ma_Cty}'):
-                df_tong_hop = crawl_tong_hop_du_lieu_tat_ca_cho_dashboard()
+        with st.spinner(f'Đang lấy dữ liệu cho công ty {st.session_state.Ma_Cty}'):
+            # Lấy dữ liệu từ database nếu có
+            df_tong_hop_db = pd.DataFrame([])
+            if st.session_state.get('co_san_Cty', False):
+                df_tong_hop_db = get_tong_hop_du_lieu()
                 
-                if df_tong_hop is None:    
-                    st.session_state.df_tong_hop = pd.DataFrame([])
-                    st.warning(f'Không có dữ liệu của công ty {st.session_state.Ma_Cty} trên CafeF')
-                else:
-                    st.session_state.df_tong_hop = df_tong_hop
-                    st.session_state.da_lay_du_lieu = True
-                    st.session_state.da_cao_du_lieu = True
-                    st.rerun()
+            
+            # Crawl dữ liệu từ web
+            df_tong_hop_web = crawl_tong_hop_du_lieu_tat_ca_cho_dashboard()
+
+            if df_tong_hop_web is None:
+                df_tong_hop_web = pd.DataFrame([])
+                st.warning(f'Không có dữ liệu của công ty {st.session_state.Ma_Cty} trên CafeF')
+            
+            # Merge dữ liệu từ database và web
+            if not df_tong_hop_db.empty and not df_tong_hop_web.empty:
+                df_tong_hop = pd.concat([df_tong_hop_db, df_tong_hop_web]).drop_duplicates(subset=['Ma_Cty', 'Nam']).reset_index(drop=True)
+            elif not df_tong_hop_db.empty:
+                df_tong_hop = df_tong_hop_db
+            else:
+                df_tong_hop = df_tong_hop_web
+                
+            # Merge với dữ liệu upload nếu có
+            if any([st.session_state.get('uploaded_cdkt'), st.session_state.get('uploaded_kqkd'), st.session_state.get('uploaded_lctt')]):
+                df_tong_hop = merge_du_lieu_upload(df_tong_hop, 
+                                                  st.session_state.get('uploaded_cdkt'), 
+                                                  st.session_state.get('uploaded_kqkd'), 
+                                                  st.session_state.get('uploaded_lctt'))
+                
+            st.session_state.df_tong_hop = df_tong_hop
+            st.session_state.da_lay_du_lieu = True
+            st.session_state.da_cao_du_lieu = not df_tong_hop_web.empty
+            # st.rerun()
                     
 def setup_interface():
     
@@ -217,5 +265,3 @@ def setup_interface():
         and not st.session_state.get('df_tong_hop', pd.DataFrame()).empty
     ):
         setup_dashboard()
-    
-    

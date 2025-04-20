@@ -1,0 +1,31 @@
+# Workflow: bao_cao_upload
+
+## Current Tasks from User Prompt
+- Thêm 3 ô upload dữ liệu cho mỗi loại báo cáo (CDKT, KQKD, LCTT) với khả năng thiếu file nhưng vẫn tiếp tục được.
+- Xử lý dữ liệu từ file upload, bỏ qua các dòng đầu không liên quan và tìm dòng có cột từ thứ 2 trở đi là dạng năm.
+- Thay đổi logic khi chọn công ty: truy xuất dữ liệu từ database và cào web cho tất cả các năm và báo cáo, sau đó merge với dữ liệu từ file upload nếu có.
+- Cập nhật logic theo phản hồi: Khi chọn công ty, lấy dữ liệu từ DB, crawl web, lấy dữ liệu từ upload file. Khi chọn năm, lấy dữ liệu đã merge để tính toán, kiểm tra loại mô hình, kiểm tra dữ liệu đủ để dự báo, thông báo nếu thiếu dữ liệu, và vẫn hiển thị dashboard với dữ liệu đã merge.
+
+## Plan (Simple)
+Tôi sẽ thực hiện các thay đổi theo yêu cầu bằng cách:
+1. Cập nhật giao diện trong file `interface.py` để thêm các ô upload file cho từng loại báo cáo.
+2. Thêm logic xử lý file upload trong `scrape_controller.py` để đọc và xử lý dữ liệu từ các file upload, bỏ qua các dòng đầu không liên quan.
+3. Sửa đổi logic trong `interface.py` và các file controller để khi chọn công ty, dữ liệu sẽ được truy xuất từ database, cào web và merge với dữ liệu upload nếu có.
+4. Cập nhật logic theo phản hồi để đảm bảo khi chọn công ty lấy dữ liệu từ DB, crawl web, merge với upload file; khi chọn năm kiểm tra dữ liệu, mô hình và thông báo nếu thiếu dữ liệu.
+
+## Steps
+1. Cập nhật file `interface.py` để thêm 3 ô upload file cho các loại báo cáo (CDKT, KQKD, LCTT).
+2. Thêm hàm xử lý file upload trong `scrape_controller.py` để đọc dữ liệu và xác định dòng bắt đầu bằng cách tìm cột có giá trị dạng năm.
+3. Sửa đổi logic trong `interface.py` để khi chọn công ty, gọi hàm thu thập dữ liệu từ web và database, sau đó merge với dữ liệu từ file upload nếu có.
+4. Cập nhật logic trong `interface.py` theo phản hồi để khi chọn công ty lấy dữ liệu từ DB, crawl web, merge với upload file; khi chọn năm kiểm tra dữ liệu, mô hình và thông báo nếu thiếu dữ liệu.
+5. Kiểm tra và cập nhật các file khác nếu cần thiết để đảm bảo tính nhất quán.
+
+## Things Done
+- Đã đọc và hiểu nội dung các file `interface.py`, `data_controller.py`, và `scrape_controller.py`.
+- Đã cập nhật file `interface.py` để thêm 3 ô upload file cho các loại báo cáo (CDKT, KQKD, LCTT).
+- Đã thêm logic xử lý file upload vào file `scrape_controller.py` để đọc và merge dữ liệu từ file upload.
+- Đã cập nhật logic trong `interface.py` để merge dữ liệu từ database với dữ liệu upload khi chọn công ty.
+- Đã cập nhật logic trong `interface.py` theo phản hồi để khi chọn công ty lấy dữ liệu từ DB, crawl web, merge với upload file; khi chọn năm kiểm tra dữ liệu, mô hình và thông báo nếu thiếu dữ liệu.
+
+## Things Not Done Yet
+- Không còn nhiệm vụ nào chưa hoàn thành.

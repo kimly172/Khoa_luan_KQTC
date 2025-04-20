@@ -1,0 +1,172 @@
+import pandas as pd
+import streamlit as st
+from unidecode import unidecode
+import re
+
+def xu_ly_file_upload(uploaded_file, loai_bao_cao):
+    """
+    Xử lý file upload, bỏ qua các dòng đầu không liên quan và tìm dòng có cột từ thứ 2 trở đi là dạng năm.
+    Args:
+        uploaded_file: File được upload từ Streamlit.
+        loai_bao_cao: Loại báo cáo (CDKT, KQKD, LCTT).
+    Returns:
+        DataFrame chứa dữ liệu từ file upload hoặc None nếu không xử lý được.
+    """
+    if uploaded_file is None:
+        return None
+    
+    try:
+        # Kiểm tra loại file để đọc dữ liệu
+        file_extension = uploaded_file.name.split('.')[-1].lower()
+        if file_extension in ['xlsx', 'xls']:
+            df = pd.read_excel(uploaded_file, header=None)
+        elif file_extension == 'csv':
+            df = pd.read_csv(uploaded_file, header=None, encoding='utf-8')
+        else:
+            st.warning(f"Định dạng file {loai_bao_cao} không được hỗ trợ. Vui lòng sử dụng file Excel hoặc CSV.")
+            return None
+        
+        # Tìm dòng có cột từ thứ 2 trở đi là dạng năm (số nguyên từ 2000 đến năm hiện tại)
+        start_row = None
+        for i in range(len(df)):
+            row = df.iloc[i]
+            for j in range(1, len(row)):
+                try:
+                    val = float(row[j])
+                    if val.is_integer() and 2000 <= int(val) <= pd.Timestamp.now().year:
+                        start_row = i
+                        break
+                except (ValueError, TypeError):
+                    continue
+            if start_row is not None:
+                break
+        
+        if start_row is None:
+            st.warning(f"Không tìm thấy dòng chứa năm trong file {loai_bao_cao}. Vui lòng kiểm tra định dạng file.")
+            return None
+        
+        # Đọc lại file với dòng tiêu đề là dòng tìm được
+        if file_extension in ['xlsx', 'xls']:
+            df = pd.read_excel(uploaded_file, header=start_row)
+        elif file_extension == 'csv':
+            df = pd.read_csv(uploaded_file, header=start_row, encoding='utf-8')
+            
+        df.columns = df.columns.astype(str).str.strip()
+        df.fillna(0, inplace=True)
+        
+        return df
+    
+    except Exception as e:
+        st.error(f"Lỗi khi xử lý file {loai_bao_cao}: {str(e)}")
+        return None
+    
+search_terms_LCTT = {
+    # LCTT (Báo cáo Lưu chuyển Tiền tệ)
+    "DTRTHDKD": "Lưu chuyển tiền thuần từ hoạt động kinh doanh",
+    "DTRTHDDT": "Lưu chuyển tiền thuần từ hoạt động đầu tư",
+    "DTRTHDTC": "Lưu chuyển tiền thuần từ hoạt động tài chính",
+    "KH": "Khấu hao TSCĐ và BĐSĐT",
+}
+
+search_terms_CDKT = {
+    # CDKT (Bảng Cân đối Kế toán)
+    "TTS": "TỔNG CỘNG TÀI SẢN",
+    "TSNH": "TÀI SẢN NGẮN HẠN",
+    "TVCKTDT": "Tiền và các khoản tương đương tiền",
+    "HTK": "Hàng tồn kho",
+    "TSCDHH": "Tài sản cố định hữu hình",
+    "TSCD": "Tài sản cố định",
+    "CKPTNH": "Các khoản phải thu ngắn hạn",
+    "VCSH": "VỐN CHỦ SỞ HỮU",
+    "NPT": "NỢ PHẢI TRẢ",
+    "NNH": "Nợ ngắn hạn",
+    "NDH": "Nợ dài hạn",
+    "PTNBNH": "Phải trả người bán ngắn hạn",
+}
+
+search_terms_KQKD = {
+    # KQHDKD (Báo cáo Kết quả Hoạt động Kinh doanh)
+    "DTT": "Doanh thu thuần về bán hàng và cung cấp dịch vụ",
+    "LNT": "Lợi nhuận thuần từ hoạt động kinh doanh",
+    "LNR": "Lợi nhuận sau thuế thu nhập doanh nghiệp",
+    "LNG": "Lợi nhuận gộp về bán hàng và cung cấp dịch vụ",
+    "GVHB": "Giá vốn hàng bán",
+    "LCBTCP": "Lãi cơ bản trên cổ phiếu",
+    "CPLV": "Chi phí lãi vay",
+}    
+
+def normalize_text(text):
+    # Kiểm tra nếu text là kiểu chuỗi
+    if isinstance(text, str):
+        # Chuyển thành chữ thường và loại bỏ dấu tiếng Việt
+        text = text.lower()
+        text = unidecode(text)
+        # Loại bỏ các ký tự không mong muốn (ngoài a-z, 0-9 và khoảng trắng)
+        text = re.sub(r'[^a-z0-9\s]', '', text)
+    # Nếu là kiểu số thì không làm gì, giữ nguyên
+    return text
+    
+def merge_du_lieu_upload(df_total, uploaded_cdkt, uploaded_kqkd, uploaded_lctt):
+    """
+    Merge dữ liệu từ file upload với dữ liệu tổng hợp.
+    Args:
+        df_total: DataFrame chứa dữ liệu tổng hợp từ database hoặc web.
+        uploaded_cdkt, uploaded_kqkd, uploaded_lctt: Các file upload tương ứng.
+    Returns:
+        DataFrame chứa dữ liệu đã được merge.
+    """
+    # Xử lý từng file upload
+    df_cdkt = xu_ly_file_upload(uploaded_cdkt, "CDKT")
+    df_kqkd = xu_ly_file_upload(uploaded_kqkd, "KQKD")
+    df_lctt = xu_ly_file_upload(uploaded_lctt, "LCTT")
+    
+    # Nếu không có dữ liệu upload nào, trả về dữ liệu gốc
+    if df_cdkt is None and df_kqkd is None and df_lctt is None:
+        return df_total
+    
+    # Merge dữ liệu upload vào df_total
+    dong_hien_tai = len(df_total)
+    if df_cdkt is not None:
+        for year in df_cdkt.columns[1:]:
+            if year not in df_total['Nam'].values:
+                df_total.at[dong_hien_tai, 'Id'] = int(dong_hien_tai + 1)
+                df_total.at[dong_hien_tai, 'Ma_Cty'] = st.session_state.Ma_Cty
+                df_total.at[dong_hien_tai, 'Nam'] = int(year)
+                for key, term in search_terms_CDKT.items():
+                    matched_rows = df_cdkt.loc[df_cdkt.iloc[:, 0].str.contains(normalize_text(term), na=False), year]
+                    value = matched_rows.values
+                    if value.size == 1:
+                        df_total.at[dong_hien_tai, key] = float(value[0])
+                dong_hien_tai += 1
+    
+    if df_kqkd is not None:
+        for year in df_kqkd.columns[1:]:
+            if year not in df_total['Nam'].values:
+                df_total.at[dong_hien_tai, 'Id'] = int(dong_hien_tai + 1)
+                df_total.at[dong_hien_tai, 'Ma_Cty'] = st.session_state.Ma_Cty
+                df_total.at[dong_hien_tai, 'Nam'] = int(year)
+                for key, term in search_terms_KQKD.items():
+                    matched_rows = df_kqkd.loc[df_kqkd.iloc[:, 0].str.contains(normalize_text(term), na=False), year]
+                    value = matched_rows.values
+                    if value.size == 1:
+                        df_total.at[dong_hien_tai, key] = float(value[0])
+                dong_hien_tai += 1
+    
+    if df_lctt is not None:
+        for year in df_lctt.columns[1:]:
+            if year not in df_total['Nam'].values:
+                df_total.at[dong_hien_tai, 'Id'] = int(dong_hien_tai + 1)
+                df_total.at[dong_hien_tai, 'Ma_Cty'] = st.session_state.Ma_Cty
+                df_total.at[dong_hien_tai, 'Nam'] = int(year)
+                for key, term in search_terms_LCTT.items():
+                    matched_rows = df_lctt.loc[df_lctt.iloc[:, 0].str.contains(normalize_text(term), na=False), year]
+                    value = matched_rows.values
+                    if value.size == 1:
+                        df_total.at[dong_hien_tai, key] = float(value[0])
+                dong_hien_tai += 1
+    
+    # Xóa các dòng có NaN trong 'Nam'
+    na_indexes = df_total[df_total['Nam'].isna()].index
+    df_total = df_total.drop(index=na_indexes).reset_index(drop=True)
+    
+    return df_total
