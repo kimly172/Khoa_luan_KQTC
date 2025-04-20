@@ -84,7 +84,7 @@ class FinanceStat:
             ten_bao_cao_theo_url = self.report_type_mapping.get(report_type, 'Không xác định')
             ten_bao_cao_hien_thi = self.report_type_mapping_for_display.get(report_type, 'Không xác định')
             
-            year_list = list(range(datetime.now().year, 2000, -4))
+            year_list = list(range(datetime.now().year, 2020, -4))
             result = {} 
 
             for year in year_list:
