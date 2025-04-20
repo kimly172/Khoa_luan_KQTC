@@ -141,8 +141,8 @@ def chon_cong_ty_khong_cao_web():
             st.session_state.uploaded_lctt = None
             # Thông báo cho người dùng rằng các file upload đã được xóa
             st.rerun()
-            
-def chon_nam():
+                    
+def chon_nam_khong_cao_web():
     if st.session_state.get('da_lay_du_lieu', False) and not st.session_state.get('df_tong_hop', pd.DataFrame()).empty:
         df_cong_ty = st.session_state.df_tong_hop 
         list_cong_ty_theo_nam = df_cong_ty['Nam'].tolist()
@@ -203,7 +203,7 @@ def chon_nam():
         st.session_state.co_san_du_lieu_du_doan = False
 
 def upload_bao_cao():
-    # st.markdown("Bạn có thể upload các file báo cáo tài chính (CDKT, KQKD, LCTT) để bổ sung dữ liệu. Nếu thiếu file, hệ thống vẫn có thể tiếp tục xử lý.")
+    st.markdown("Bạn phải upload đầy đủ các file báo cáo tài chính (CDKT, KQKD, LCTT) để hệ thống có thể xử lý dữ liệu.")
     
     gap1, col, gap2 = st.columns([1, 1.3, 1])
     with col:   
@@ -216,7 +216,6 @@ def upload_bao_cao():
         uploaded_cdkt = st.file_uploader("Upload Bảng Cân Đối Kế Toán (CDKT)", type=["xlsx", "xls", "csv"], key=cdkt_key)
         if uploaded_cdkt is not None:
             st.session_state.uploaded_cdkt = uploaded_cdkt
-            # st.success("Đã upload file CDKT thành công!")
         else:
             st.session_state.uploaded_cdkt = None
         
@@ -224,7 +223,6 @@ def upload_bao_cao():
         uploaded_kqkd = st.file_uploader("Upload Báo Cáo Kết Quả Hoạt Động Kinh Doanh (KQKD)", type=["xlsx", "xls", "csv"], key=kqkd_key)
         if uploaded_kqkd is not None:
             st.session_state.uploaded_kqkd = uploaded_kqkd
-            # st.success("Đã upload file KQKD thành công!")
         else:
             st.session_state.uploaded_kqkd = None
         
@@ -232,11 +230,10 @@ def upload_bao_cao():
         uploaded_lctt = st.file_uploader("Upload Báo Cáo Lưu Chuyển Tiền Tệ (LCTT)", type=["xlsx", "xls", "csv"], key=lctt_key)
         if uploaded_lctt is not None:
             st.session_state.uploaded_lctt = uploaded_lctt
-            # st.success("Đã upload file LCTT thành công!")
         else:
             st.session_state.uploaded_lctt = None
     
-    # st.markdown("**Lưu ý:** Nếu không upload file, hệ thống sẽ sử dụng dữ liệu từ database hoặc thu thập từ web.")
+    st.markdown("**Lưu ý:** Hệ thống yêu cầu upload đầy đủ cả 3 file báo cáo tài chính để tiếp tục xử lý.")
 
 def setup_introduce():
     # Tạo tiêu đề trong sidebar
@@ -248,7 +245,7 @@ def setup_introduce():
         with col1:    
             chon_cong_ty_khong_cao_web()
         with col2:
-            chon_nam()
+            chon_nam_khong_cao_web()
     
     # Thêm phần upload báo cáo
     upload_bao_cao()
@@ -277,12 +274,18 @@ def setup_introduce():
             else:
                 df_tong_hop = df_tong_hop_web
                 
-            # Merge với dữ liệu upload nếu có
-            if any([st.session_state.get('uploaded_cdkt'), st.session_state.get('uploaded_kqkd'), st.session_state.get('uploaded_lctt')]):
+            # Merge với dữ liệu upload nếu có đầy đủ cả 3 file
+            if all([st.session_state.get('uploaded_cdkt'), st.session_state.get('uploaded_kqkd'), st.session_state.get('uploaded_lctt')]):
                 df_tong_hop = merge_du_lieu_upload(df_tong_hop, 
                                                   st.session_state.get('uploaded_cdkt'), 
                                                   st.session_state.get('uploaded_kqkd'), 
                                                   st.session_state.get('uploaded_lctt'))
+                if df_tong_hop is None:
+                    st.error("Không thể xử lý dữ liệu upload. Vui lòng kiểm tra lại các file đã upload.")
+                    st.session_state.da_lay_du_lieu = False
+                    return
+            else:
+                st.warning("Chưa upload đầy đủ các file báo cáo tài chính. Hệ thống sẽ không xử lý dữ liệu upload.")
                 
             st.session_state.df_tong_hop = df_tong_hop
             st.session_state.da_lay_du_lieu = True

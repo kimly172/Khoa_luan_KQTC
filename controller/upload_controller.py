@@ -119,7 +119,7 @@ def normalize_text(text):
     
 def merge_du_lieu_upload(df_total, uploaded_cdkt, uploaded_kqkd, uploaded_lctt):
     """
-    Merge dữ liệu từ file upload với dữ liệu tổng hợp.
+    Merge dữ liệu từ file upload với dữ liệu tổng hợp, chuẩn hóa đơn vị dựa trên tỷ lệ so sánh.
     Args:
         df_total: DataFrame chứa dữ liệu tổng hợp từ database hoặc web.
         uploaded_cdkt, uploaded_kqkd, uploaded_lctt: Các file upload tương ứng.
@@ -131,9 +131,33 @@ def merge_du_lieu_upload(df_total, uploaded_cdkt, uploaded_kqkd, uploaded_lctt):
     df_kqkd = xu_ly_file_upload(uploaded_kqkd, "KQKD")
     df_lctt = xu_ly_file_upload(uploaded_lctt, "LCTT")
     
-    # Nếu không có dữ liệu upload nào, trả về dữ liệu gốc
-    if df_cdkt is None and df_kqkd is None and df_lctt is None:
-        return df_total
+    # Nếu thiếu bất kỳ file upload nào, thông báo lỗi và trả về None
+    if df_cdkt is None or df_kqkd is None or df_lctt is None:
+        st.error("Thiếu file báo cáo tài chính. Vui lòng upload đầy đủ các file CDKT, KQKD và LCTT để tiếp tục.")
+        return None
+    
+    # Nếu không có dữ liệu trong database, tạo DataFrame mới từ dữ liệu upload
+    if df_total.empty:
+        df_total = pd.DataFrame(columns=['Id', 'Ma_Cty', 'Nam'] + list(search_terms_CDKT.keys()) + list(search_terms_KQKD.keys()) + list(search_terms_LCTT.keys()))
+    
+    # Tính tỷ lệ chuẩn hóa nếu có dữ liệu trong database
+    ty_le_chuan_hoa = 1.0
+    if not df_total.empty:
+        # Lấy một giá trị mẫu từ dữ liệu upload và database để so sánh (ví dụ: TTS từ CDKT)
+        for year in df_cdkt.columns[1:]:
+            if year in df_total['Nam'].values:
+                upload_val = df_cdkt.loc[df_cdkt.iloc[:, 0].str.contains(normalize_text(search_terms_CDKT['TTS']), na=False), year]
+                if not upload_val.empty:
+                    upload_val = float(upload_val.values[0])
+                    db_val = df_total.loc[df_total['Nam'] == int(year), 'TTS']
+                    if not db_val.empty:
+                        db_val = float(db_val.values[0])
+                        if upload_val != 0:
+                            ty_le_chuan_hoa = db_val / upload_val
+                            st.info(f"Đã tính tỷ lệ chuẩn hóa dữ liệu upload: {ty_le_chuan_hoa:.2f} dựa trên giá trị Tổng Tài Sản năm {year}.")
+                            break
+        if ty_le_chuan_hoa == 1.0:
+            st.warning("Không tìm thấy giá trị phù hợp để tính tỷ lệ chuẩn hóa. Dữ liệu upload sẽ được giữ nguyên.")
     
     # Merge dữ liệu upload vào df_total
     dong_hien_tai = len(df_total)
@@ -147,7 +171,8 @@ def merge_du_lieu_upload(df_total, uploaded_cdkt, uploaded_kqkd, uploaded_lctt):
                     matched_rows = df_cdkt.loc[df_cdkt.iloc[:, 0].str.contains(normalize_text(term), na=False), year]
                     value = matched_rows.values
                     if value.size == 1:
-                        df_total.at[dong_hien_tai, key] = float(value[0])
+                        # Điều chỉnh đơn vị dữ liệu theo tỷ lệ chuẩn hóa
+                        df_total.at[dong_hien_tai, key] = float(value[0]) * ty_le_chuan_hoa
                 dong_hien_tai += 1
     
     if df_kqkd is not None:
@@ -160,7 +185,8 @@ def merge_du_lieu_upload(df_total, uploaded_cdkt, uploaded_kqkd, uploaded_lctt):
                     matched_rows = df_kqkd.loc[df_kqkd.iloc[:, 0].str.contains(normalize_text(term), na=False), year]
                     value = matched_rows.values
                     if value.size == 1:
-                        df_total.at[dong_hien_tai, key] = float(value[0])
+                        # Điều chỉnh đơn vị dữ liệu theo tỷ lệ chuẩn hóa
+                        df_total.at[dong_hien_tai, key] = float(value[0]) * ty_le_chuan_hoa
                 dong_hien_tai += 1
     
     if df_lctt is not None:
@@ -173,7 +199,8 @@ def merge_du_lieu_upload(df_total, uploaded_cdkt, uploaded_kqkd, uploaded_lctt):
                     matched_rows = df_lctt.loc[df_lctt.iloc[:, 0].str.contains(normalize_text(term), na=False), year]
                     value = matched_rows.values
                     if value.size == 1:
-                        df_total.at[dong_hien_tai, key] = float(value[0])
+                        # Điều chỉnh đơn vị dữ liệu theo tỷ lệ chuẩn hóa
+                        df_total.at[dong_hien_tai, key] = float(value[0]) * ty_le_chuan_hoa
                 dong_hien_tai += 1
     
     # Xóa các dòng có NaN trong 'Nam'
