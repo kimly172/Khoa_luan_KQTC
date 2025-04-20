@@ -119,7 +119,7 @@ def chon_cong_ty_khong_cao_web():
     # Tạo khóa duy nhất cho selectbox để tránh trùng lặp
     Ma_Cty_display = st.selectbox(
         "Vui lòng nhập tên công ty:",
-        options=[""] + df_thong_tin_cong_ty['Ma_Cty_display'].tolist(),
+        options=[""] + df_thong_tin_cong_ty['Ma_Cty'].tolist(),
         index=0,
         help="Chọn một công ty từ danh sách để xem thông tin chi tiết.",
         key="ma_cty_selectbox"
