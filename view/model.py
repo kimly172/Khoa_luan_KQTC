@@ -14,7 +14,7 @@ def setup_model():
         df_total = st.session_state.df_tong_hop
         nam_ht = st.session_state.Nam_hien_tai
         
-        # Kiểm tra loại mô hình và dữ liệu đủ để dự báo
+        # Lấy dữ liệu theo loại mô hình
         model_type = st.session_state.get('model_type', 'XGB')
         if model_type == 'LSTM':
             # LSTM cần dữ liệu 3 năm trước đó cộng với năm hiện tại (tổng 4 năm)
@@ -23,18 +23,14 @@ def setup_model():
             # Các mô hình khác chỉ cần dữ liệu năm hiện tại
             cac_nam_can = [nam_ht]
         
-        nam_thieu = [nam for nam in cac_nam_can if nam not in df_total['Nam'].tolist()]
-        if nam_thieu:
-            st.warning(f"Không đủ dữ liệu để dự báo cho năm {nam_ht + 1}. Thiếu dữ liệu cho năm: {', '.join(map(str, nam_thieu))}.")
-        else:
-            df_du_lieu_du_doan = tinh_chi_so(df_total[df_total['Nam'].isin(cac_nam_can)])
-            if not df_du_lieu_du_doan.empty:
-                ket_qua = du_doan_ket_qua(df_du_lieu_du_doan)
-                if ket_qua == 1:
-                    st.success(f'Kết quả: Công ty {st.session_state.Ma_Cty} sẽ Kiệt quệ Tài chính vào {st.session_state.Nam_hien_tai + 1}')
-                else:
-                    st.info(f'Kết quả: Công ty {st.session_state.Ma_Cty} sẽ không Kiệt quệ Tài chính vào {st.session_state.Nam_hien_tai + 1}')
+        df_du_lieu_du_doan = tinh_chi_so(df_total[df_total['Nam'].isin(cac_nam_can)])
+        if not df_du_lieu_du_doan.empty:
+            ket_qua = du_doan_ket_qua(df_du_lieu_du_doan)
+            if ket_qua == 1:
+                st.success(f'Kết quả: Công ty {st.session_state.Ma_Cty} sẽ Kiệt quệ Tài chính vào {st.session_state.Nam_hien_tai + 1}')
             else:
-                st.warning(f"Không thể tính toán chỉ số để dự báo cho năm {nam_ht + 1}.")
+                st.info(f'Kết quả: Công ty {st.session_state.Ma_Cty} sẽ không Kiệt quệ Tài chính vào {st.session_state.Nam_hien_tai + 1}')
+        else:
+            st.warning(f"Không thể tính toán chỉ số để dự báo cho năm {nam_ht + 1}.")
     else:
         st.warning("Không có dữ liệu để dự báo. Vui lòng chọn công ty và đảm bảo dữ liệu đã được tải.")

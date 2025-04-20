@@ -148,12 +148,21 @@ def chon_nam():
         list_cong_ty_theo_nam = df_cong_ty['Nam'].tolist()
 
         danh_sach_nam = list(range(2013, 2025))
+        model_type = st.session_state.get('model_type', 'XGB')
         nam_hien_thi = []
         for nam in danh_sach_nam:
-            if nam in list_cong_ty_theo_nam:
-                nam_hien_thi.append(f"{nam + 1} - Có dữ liệu")
+            if model_type == 'LSTM':
+                # LSTM cần 4 năm dữ liệu để tính chỉ số
+                nam_can_kiem_tra = list(range(nam - 3, nam + 1))
             else:
-                nam_hien_thi.append(f"{nam + 1} - Không có dữ liệu")
+                # Các mô hình khác cần 2 năm dữ liệu để tính chỉ số
+                nam_can_kiem_tra = list(range(nam - 1, nam + 1))
+            
+            nam_thieu = [n for n in nam_can_kiem_tra if n not in list_cong_ty_theo_nam]
+            if not nam_thieu:
+                nam_hien_thi.append(f"{nam + 1}")
+            else:
+                nam_hien_thi.append(f"{nam + 1} - Không đủ dữ liệu")
 
         # Phần chọn năm trên trang chính
         Nam_can_du_doan = st.selectbox(
@@ -163,22 +172,17 @@ def chon_nam():
             help="Chọn một năm từ danh sách để dự báo."
         )
         
-        parts = Nam_can_du_doan.split(" - ")
-        if len(parts) == 2 and parts[0] != '':
+        if Nam_can_du_doan:
+            parts = Nam_can_du_doan.split(" - ")
             nam_du_bao = int(parts[0]) - 1
             st.session_state.Nam_hien_tai = nam_du_bao
             
-            # Kiểm tra loại mô hình và dữ liệu đủ để dự báo
-            model_type = st.session_state.get('model_type', 'XGB')
-            if model_type == 'LSTM':
-                # LSTM cần dữ liệu 3 năm trước đó
-                nam_can_kiem_tra = list(range(nam_du_bao - 2, nam_du_bao + 1))
-            else:
-                # Các mô hình khác chỉ cần dữ liệu năm hiện tại
-                nam_can_kiem_tra = [nam_du_bao]
-            
-            nam_thieu = [nam for nam in nam_can_kiem_tra if nam not in list_cong_ty_theo_nam]
-            if nam_thieu:
+            if len(parts) == 2 and parts[1] == "Không đủ dữ liệu":
+                if model_type == 'LSTM':
+                    nam_can_kiem_tra = list(range(nam_du_bao - 3, nam_du_bao + 1))
+                else:
+                    nam_can_kiem_tra = list(range(nam_du_bao - 1, nam_du_bao + 1))
+                nam_thieu = [n for n in nam_can_kiem_tra if n not in list_cong_ty_theo_nam]
                 st.warning(f"Không đủ dữ liệu để dự báo cho năm {nam_du_bao + 1}. Thiếu dữ liệu cho các năm: {', '.join(map(str, nam_thieu))}.")
                 st.session_state.co_san_du_lieu_du_doan = False
             else:
