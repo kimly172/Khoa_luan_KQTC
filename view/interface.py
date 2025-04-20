@@ -95,6 +95,51 @@ def chon_cong_ty():
             st.session_state.Ma_Cty = ma_cty_moi
             st.session_state.co_san_Cty = co_san_cty_moi
             st.session_state.da_lay_du_lieu = False
+            # Xóa các file upload khi thay đổi công ty
+            st.session_state.uploaded_cdkt = None
+            st.session_state.uploaded_kqkd = None
+            st.session_state.uploaded_lctt = None
+            # Thông báo cho người dùng rằng các file upload đã được xóa
+            st.rerun()
+            
+def chon_cong_ty_khong_cao_web():
+    # Khởi tạo biến session nếu chưa có
+    if 'da_lay_du_lieu' not in st.session_state:
+        st.session_state.da_lay_du_lieu = False
+    if 'Ma_Cty' not in st.session_state:
+        st.session_state.Ma_Cty = ''
+    if 'co_san_Cty' not in st.session_state:
+        st.session_state.co_san_Cty = True
+        
+    df_thong_tin_cong_ty = get_thong_tin_cong_ty()
+    
+    # Tạo cột hiển thị
+    df_thong_tin_cong_ty = df_thong_tin_cong_ty[df_thong_tin_cong_ty['co_san_Cty'] == True]
+    
+    # Tạo khóa duy nhất cho selectbox để tránh trùng lặp
+    Ma_Cty_display = st.selectbox(
+        "Vui lòng nhập tên công ty:",
+        options=[""] + df_thong_tin_cong_ty['Ma_Cty_display'].tolist(),
+        index=0,
+        help="Chọn một công ty từ danh sách để xem thông tin chi tiết.",
+        key="ma_cty_selectbox"
+    )
+    
+    # Chỉ xử lý khi có công ty được chọn
+    if Ma_Cty_display:
+        ma_cty_moi = Ma_Cty_display
+        co_san_cty_moi = True  # Vì đã lọc nên tất cả đều là có sẵn
+                
+        # Cập nhật thông tin công ty
+        if ma_cty_moi and (ma_cty_moi != st.session_state.get('Ma_Cty', '')):
+            st.session_state.Ma_Cty = ma_cty_moi
+            st.session_state.co_san_Cty = co_san_cty_moi
+            st.session_state.da_lay_du_lieu = False
+            # Xóa các file upload khi thay đổi công ty
+            st.session_state.uploaded_cdkt = None
+            st.session_state.uploaded_kqkd = None
+            st.session_state.uploaded_lctt = None
+            # Thông báo cho người dùng rằng các file upload đã được xóa
             st.rerun()
             
 def chon_nam():
@@ -158,31 +203,34 @@ def upload_bao_cao():
     
     gap1, col, gap2 = st.columns([1, 1.3, 1])
     with col:   
-        # col1, col2, col3 = st.columns([1, 1, 1])
-        # with col1:    
-            # Ô upload cho CDKT
-            uploaded_cdkt = st.file_uploader("Upload Bảng Cân Đối Kế Toán (CDKT)", type=["xlsx", "xls", "csv"], key="upload_cdkt")
-            if uploaded_cdkt is not None:
-                st.session_state.uploaded_cdkt = uploaded_cdkt
-                # st.success("Đã upload file CDKT thành công!")
-            else:
-                st.session_state.uploaded_cdkt = None
-        # with col2:
-            # Ô upload cho KQKD
-            uploaded_kqkd = st.file_uploader("Upload Báo Cáo Kết Quả Hoạt Động Kinh Doanh (KQKD)", type=["xlsx", "xls", "csv"], key="upload_kqkd")
-            if uploaded_kqkd is not None:
-                st.session_state.uploaded_kqkd = uploaded_kqkd
-                # st.success("Đã upload file KQKD thành công!")
-            else:
-                st.session_state.uploaded_kqkd = None
-        # with col3:
-            # Ô upload cho LCTT
-            uploaded_lctt = st.file_uploader("Upload Báo Cáo Lưu Chuyển Tiền Tệ (LCTT)", type=["xlsx", "xls", "csv"], key="upload_lctt")
-            if uploaded_lctt is not None:
-                st.session_state.uploaded_lctt = uploaded_lctt
-                # st.success("Đã upload file LCTT thành công!")
-            else:
-                st.session_state.uploaded_lctt = None
+        # Tạo key động dựa trên Ma_Cty để làm mới widget khi thay đổi công ty
+        cdkt_key = f"upload_cdkt_{st.session_state.get('Ma_Cty', 'default')}"
+        kqkd_key = f"upload_kqkd_{st.session_state.get('Ma_Cty', 'default')}"
+        lctt_key = f"upload_lctt_{st.session_state.get('Ma_Cty', 'default')}"
+        
+        # Ô upload cho CDKT
+        uploaded_cdkt = st.file_uploader("Upload Bảng Cân Đối Kế Toán (CDKT)", type=["xlsx", "xls", "csv"], key=cdkt_key)
+        if uploaded_cdkt is not None:
+            st.session_state.uploaded_cdkt = uploaded_cdkt
+            # st.success("Đã upload file CDKT thành công!")
+        else:
+            st.session_state.uploaded_cdkt = None
+        
+        # Ô upload cho KQKD
+        uploaded_kqkd = st.file_uploader("Upload Báo Cáo Kết Quả Hoạt Động Kinh Doanh (KQKD)", type=["xlsx", "xls", "csv"], key=kqkd_key)
+        if uploaded_kqkd is not None:
+            st.session_state.uploaded_kqkd = uploaded_kqkd
+            # st.success("Đã upload file KQKD thành công!")
+        else:
+            st.session_state.uploaded_kqkd = None
+        
+        # Ô upload cho LCTT
+        uploaded_lctt = st.file_uploader("Upload Báo Cáo Lưu Chuyển Tiền Tệ (LCTT)", type=["xlsx", "xls", "csv"], key=lctt_key)
+        if uploaded_lctt is not None:
+            st.session_state.uploaded_lctt = uploaded_lctt
+            # st.success("Đã upload file LCTT thành công!")
+        else:
+            st.session_state.uploaded_lctt = None
     
     # st.markdown("**Lưu ý:** Nếu không upload file, hệ thống sẽ sử dụng dữ liệu từ database hoặc thu thập từ web.")
 
@@ -194,7 +242,7 @@ def setup_introduce():
     with col:   
         col1, col2 = st.columns([1, 1])
         with col1:    
-            chon_cong_ty()
+            chon_cong_ty_khong_cao_web()
         with col2:
             chon_nam()
     
@@ -233,7 +281,6 @@ def setup_introduce():
                                                   st.session_state.get('uploaded_lctt'))
                 
             st.session_state.df_tong_hop = df_tong_hop
-            st.write(df_tong_hop)
             st.session_state.da_lay_du_lieu = True
             st.session_state.da_cao_du_lieu = not df_tong_hop_web.empty
             st.rerun()
