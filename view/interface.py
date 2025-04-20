@@ -232,9 +232,10 @@ def setup_introduce():
                                                   st.session_state.get('uploaded_lctt'))
                 
             st.session_state.df_tong_hop = df_tong_hop
+            st.write(df_tong_hop)
             st.session_state.da_lay_du_lieu = True
             st.session_state.da_cao_du_lieu = not df_tong_hop_web.empty
-            # st.rerun()
+            st.rerun()
                     
 def setup_interface():
     
